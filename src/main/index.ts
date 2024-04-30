@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import Remarkable2_api from './remarkable_2_api'
 
 function createWindow(): void {
   // Create the browser window.
@@ -13,7 +14,8 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      contextIsolation: true
     }
   })
 
@@ -72,3 +74,19 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
+
+const remarkable2_ssh = new Remarkable2_api(
+  'root',
+  '192.168.1.115',
+  require('../../hidden/rm_token.json').token,
+  () => {
+    // remarkable2_ssh.ls('/home/root/.local/share/remarkable/xochitl', ['-a']).then((dirs) => {
+    //   console.log(dirs)
+    // })
+    remarkable2_ssh.Download_all_sheets_from_device().then((files) => {
+    // remarkable2_ssh.list_directories_on_device('/home/root/.local/share/remarkable/xochitl/01cb1bf3-0adc-4e7f-a3c5-d33284f73420').then((files)=> {
+      console.log(files)
+    })
+  },
+  (err) => console.error(err)
+)
