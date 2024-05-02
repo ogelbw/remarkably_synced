@@ -4,9 +4,19 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   main: {
+    build: {
+      lib: {
+        entry: resolve('src/main/electron_main.ts')
+      }
+    },
     plugins: [externalizeDepsPlugin()]
   },
   preload: {
+    build: {
+      lib: {
+        entry: resolve('src/preload/preload.ts')
+      }
+    },
     plugins: [externalizeDepsPlugin()]
   },
   renderer: {
