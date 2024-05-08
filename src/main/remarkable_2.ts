@@ -266,7 +266,7 @@ class Remarkable2_files {
           parent.children.push(this.files.get(file_hash) as remarkable_file_node)
         }
       } else {
-        // otherwise, repeatedly check the parent's parent form the metadata files until the root
+        // otherwise, repeatedly check the parent's parent from the metadata files until the root
         // is found, all files should reach the root eventually
         let current_parent = parent_directory
         const files_to_add: remarkable_directory[] = []

@@ -1,53 +1,32 @@
 :root {
   --ev-c-white: #ffffff;
-  --ev-c-white-soft: #f8f8f8;
-  --ev-c-white-mute: #f2f2f2;
+  --ev-c-white-soft: #F3EFE7;
+  --ev-c-white-mute: #ede8de;;
 
   --ev-c-black: #1b1b1f;
   --ev-c-black-soft: #222222;
   --ev-c-black-mute: #282828;
 
-  --ev-c-gray-1: #515c67;
-  --ev-c-gray-2: #414853;
-  --ev-c-gray-3: #32363f;
+  @media screen and (prefers-color-scheme: dark) {
+    --ev-c-background: var(--ev-c-black);
+    --ev-c-background-mute: var(--ev-c-black-mute);
+    --ev-c-background-soft: var(--ev-c-black-soft);
+    --ev-c-text-1: var(--ev-c-white);
+    --ev-c-text-2: var(--ev-c-white-mute);
+    --ev-c-button-alt: var(--ev-c-black-soft);
+    --ev-c-button-alt-hover: var(--ev-c-black-mute);
+  }
+  
+  @media screen and (prefers-color-scheme: light) {
+    --ev-c-background: var(--ev-c-white);
+    --ev-c-background-mute: var(--ev-c-white-mute);
+    --ev-c-background-soft: var(--ev-c-white-soft);
+    --ev-c-text-1: var(--ev-c-black);
+    --ev-c-text-2: var(--ev-c-black-mute);
+    --ev-c-button-alt: var(--ev-c-white-soft);
+    --ev-c-button-alt-hover: var(--ev-c-white-mute);
+  }
 
-  --ev-c-text-1: rgba(255, 255, 245, 0.86);
-  --ev-c-text-2: rgba(235, 235, 245, 0.6);
-  --ev-c-text-3: rgba(235, 235, 245, 0.38);
-
-  --ev-button-alt-border: transparent;
-  --ev-button-alt-text: var(--ev-c-text-1);
-  --ev-button-alt-bg: var(--ev-c-gray-3);
-  --ev-button-alt-hover-border: transparent;
-  --ev-button-alt-hover-text: var(--ev-c-text-1);
-  --ev-button-alt-hover-bg: var(--ev-c-gray-2);
-}
-
-:root {
-  --color-background: var(--ev-c-black);
-  --color-background-soft: var(--ev-c-black-soft);
-  --color-background-mute: var(--ev-c-black-mute);
-
-  --color-text: var(--ev-c-text-1);
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
-}
-
-ul {
-  list-style: none;
-}
-
-body {
-  min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  line-height: 1.6;
   font-family:
     Inter,
     -apple-system,
@@ -64,4 +43,14 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --color-background: var(--ev-c-background);
+  color: var(--ev-c-text-1);
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+  line-height: 1.6;
 }
