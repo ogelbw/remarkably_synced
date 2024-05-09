@@ -27,25 +27,12 @@ interface remarkable_template_data {
 /**
  * @description Represents a reMarkable 2 template, which is a image.
  */
-class remarkable_template {
+interface remarkable_template {
   name: string
   filename: string
   icon_code: string
   categories: string[]
   holding_directory: string
-  constructor(
-    name: string,
-    filename: string,
-    icon_code: string,
-    categories: string[],
-    holding_directory: string
-  ) {
-    this.holding_directory = holding_directory
-    this.name = name
-    this.filename = filename
-    this.icon_code = icon_code
-    this.categories = categories
-  }
 }
 
 /**
@@ -68,77 +55,22 @@ class remarkable_splashscreen {
   }
 }
 
-class remarkable_file_node {
-  public createdTime: string
-  public lastModified: string
-  public parent: string
-  public pinned: boolean
-  public type: string
-  public visibleName: string
-  public file_hash: string
-  constructor(
-    metadata: {
-      createdTime: string
-      lastModified: string
-      parent: string
-      pinned: boolean
-      type: string
-      visibleName: string
-    },
-    file_hash: string
-  ) {
-    this.createdTime = metadata.createdTime
-    this.lastModified = metadata.lastModified
-    this.parent = metadata.parent
-    this.pinned = metadata.pinned
-    this.type = metadata.type
-    this.visibleName = metadata.visibleName
-    this.file_hash = file_hash
-  }
+export interface remarkable_file_node {
+  createdTime: string
+  lastModified: string
+  parent: string
+  pinned: boolean
+  type: string
+  visibleName: string
+  file_hash: string
 }
 
 /**
  * @description Represents a reMarkable 2 directory, which is a collection of note_books and
  * directories.
  */
-class remarkable_directory extends remarkable_file_node {
-  public children: remarkable_file_node[] = []
-  constructor(
-    metadata: {
-      createdTime: string
-      lastModified: string
-      parent: string
-      pinned: boolean
-      type: string
-      visibleName: string
-    },
-    file_hash: string
-  ) {
-    super(metadata, file_hash)
-  }
-}
-
-/**
- * @description Represents a reMarkable 2 directory, which is a collection of note_books and
- * directories.
- */
-class remarkable_document extends remarkable_file_node {
-  public children: remarkable_file_node[] = []
-  constructor(
-    metadata: {
-      createdTime: string
-      lastModified: string
-      lastOpened: string
-      lastOpenedPage: number
-      parent: string
-      pinned: boolean
-      type: string
-      visibleName: string
-    },
-    file_hash: string
-  ) {
-    super(metadata, file_hash)
-  }
+interface remarkable_directory extends remarkable_file_node {
+  children: remarkable_file_node[]
 }
 
 /**
@@ -169,20 +101,16 @@ class Remarkable2_files {
       overheating: null,
       battery_empty: null
     }
-    this.files.set(
-      '',
-      new remarkable_directory(
-        {
-          createdTime: '',
-          lastModified: '',
-          parent: '',
-          pinned: false,
-          type: 'CollectionType',
-          visibleName: 'root'
-        },
-        ''
-      )
-    )
+    this.files.set('', {
+      createdTime: '',
+      lastModified: '',
+      parent: '',
+      pinned: false,
+      type: 'CollectionType',
+      visibleName: 'root',
+      file_hash: '',
+      children: []
+    } as remarkable_directory)
     this.directory_lookup.set('root', '')
     this.parse_files(files_directory)
     this.parse_templates(template_directory)
@@ -197,15 +125,13 @@ class Remarkable2_files {
 
     // create a new template object for each template in the json file
     templates_data.templates.forEach((template_data) => {
-      this.templates.push(
-        new remarkable_template(
-          template_data.name,
-          template_data.filename,
-          template_data.iconCode,
-          template_data.categories,
-          templates_directory
-        )
-      )
+      this.templates.push({
+        name: template_data.name,
+        filename: template_data.filename,
+        icon_code: template_data.iconCode,
+        categories: template_data.categories,
+        holding_directory: templates_directory
+      })
     })
   }
 
@@ -239,19 +165,23 @@ class Remarkable2_files {
 
       const file_path_split = file.split(sep)
       const file_hash = file_path_split[file_path_split.length - 1].split('.')[0]
-      const file_object = JSON.parse(fs.readFileSync(join(files_directory, file)).toString())
+      const file_object = JSON.parse(
+        fs.readFileSync(join(files_directory, file)).toString()
+      ) as remarkable_file_node
       const file_type: string = file_object.type
       const parent_directory: string = file_object.parent
+      file_object.file_hash = file_hash
       if (parent_directory === 'trash') return
 
       switch (file_type) {
         case 'CollectionType':
-          this.files.set(file_hash, new remarkable_directory(file_object, file_hash))
+          ;(file_object as remarkable_directory).children = []
+          this.files.set(file_hash, file_object)
           this.directory_lookup.set(file_object.visibleName, file_hash)
           break
 
         case 'DocumentType':
-          this.files.set(file_hash, new remarkable_document(file_object, file_hash))
+          this.files.set(file_hash, file_object)
           break
 
         default:
@@ -276,22 +206,34 @@ class Remarkable2_files {
             // not added to the actual file structure
             break
           }
+          let reconstruction_start = ''
           if (current_parent !== '') {
-            const parent_metadata = JSON.parse(
-              fs.readFileSync(join(files_directory, `${current_parent}.metadata`)).toString()
-            )
-            files_to_add.push(new remarkable_directory(parent_metadata, current_parent))
-            current_parent = parent_metadata.parent
+            if (!this.files.has(current_parent)) {
+              const parent_metadata = JSON.parse(
+                fs.readFileSync(join(files_directory, `${current_parent}.metadata`)).toString()
+              ) as remarkable_directory
+              parent_metadata.file_hash = current_parent
+              parent_metadata.children = []
+              files_to_add.push(parent_metadata)
+              current_parent = parent_metadata.parent
+            } else {
+              reconstruction_start = current_parent
+              current_parent = ''
+            }
           } else {
-            // when the directory's parent is the root, add the directory to the root and construct
-            // the rest of the collected directories until the original directory is reached.
+            // when the directory's parent is the root or a known directory,
+            // add the directory to the starting point and construct the rest
+            // of the collected directories until the original directory is reached.
             // we can do this as if the node is a parent it therefore must be a directory.
             const temp_directory = files_to_add.pop() as remarkable_directory
-            ;(this.files.get('') as remarkable_directory).children.push(
-              new remarkable_directory(temp_directory, current_parent)
+            temp_directory.parent = current_parent
+            temp_directory.children = []
+            ;(this.files.get(reconstruction_start) as remarkable_directory).children.push(
+              temp_directory
             )
             this.files.set(temp_directory.file_hash, temp_directory)
             this.directory_lookup.set(temp_directory.visibleName, temp_directory.file_hash)
+
             while (files_to_add.length > 0) {
               const current_directory = files_to_add.pop() as remarkable_directory
               const parent = this.files.get(current_directory.parent) as remarkable_directory
