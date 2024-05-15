@@ -27,7 +27,7 @@ interface remarkable_template_data {
 /**
  * @description Represents a reMarkable 2 template, which is a image.
  */
-interface remarkable_template {
+export interface remarkable_template {
   name: string
   filename: string
   icon_code: string
@@ -38,7 +38,7 @@ interface remarkable_template {
 /**
  * @description Represents a reMarkable 2 splashscreen, which is a image.
  */
-class remarkable_splashscreen {
+export class remarkable_splashscreen {
   image_path: string
   id: string
 
@@ -69,7 +69,7 @@ export interface remarkable_file_node {
  * @description Represents a reMarkable 2 directory, which is a collection of note_books and
  * directories.
  */
-interface remarkable_directory extends remarkable_file_node {
+export interface remarkable_directory extends remarkable_file_node {
   children: remarkable_file_node[]
 }
 

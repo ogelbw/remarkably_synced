@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { Remarkable_files } from './remarkable_2'
+import { get_sync_directory, set_sync_directory } from './ipc_functions'
 
 function createWindow(): void {
   // Create the browser window.
@@ -51,11 +52,28 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // === Set up IPC handlers ===
+  // get and set file directories
+  ipcMain.handle('set-files-directory', async () => {
+    return set_sync_directory('file')
+  })
+  ipcMain.handle('get-files-directory', async () => {
+    return get_sync_directory('file')
+  })
+  ipcMain.handle('set-template-directory', async () => {
+    return set_sync_directory('template')
+  })
+  ipcMain.handle('get-template-directory', async () => {
+    return get_sync_directory('template')
+  })
+  ipcMain.handle('set-splashscreen-directory', async () => {
+    return set_sync_directory('splashscreen')
+  })
+  ipcMain.handle('get-splashscreen-directory', async () => {
+    return get_sync_directory('splashscreen')
+  })
 
   createWindow()
-
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -71,22 +89,6 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-
-// const remarkable2_ssh = new Remarkable2_device(
-//   'root',
-//   '192.168.1.115',
-//   require('../../hidden/rm_token.json').token,
-//   () => {
-//     // remarkable2_ssh.ls('/home/root/.local/share/remarkable/xochitl', ['-a']).then((dirs) => {
-//     //   console.log(dirs)
-//     // })
-//     remarkable2_ssh.Download_all_sheets_from_device().then((files) => {
-//     // remarkable2_ssh.list_directories_on_device('/home/root/.local/share/remarkable/xochitl/01cb1bf3-0adc-4e7f-a3c5-d33284f73420').then((files)=> {
-//       console.log(files)
-//     })
-//   },
-//   (err) => console.error(err)
-// )
 
 const c = new Remarkable_files(
   '/home/ogelbw/.config/remarkable_synced_files/templates/',

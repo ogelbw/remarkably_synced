@@ -1,7 +1,7 @@
 import React from 'react'
 
 export interface Main_nav_menuProps {
-  list_items: string[]
+  list_items: [string, CallableFunction][]
 }
 class Main_nav_menu extends React.Component<Main_nav_menuProps> {
   menu: HTMLDivElement | null = null
@@ -39,8 +39,8 @@ class Main_nav_menu extends React.Component<Main_nav_menuProps> {
   render(): JSX.Element {
     const list_items = this.props.list_items.map((item, index) => {
       return (
-        <li className="Main_nav_item" key={index}>
-          {item}
+        <li className="Main_nav_item" key={index} onClick={() => item[1]()}>
+          {item[0]}
         </li>
       )
     })

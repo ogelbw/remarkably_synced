@@ -10,7 +10,6 @@ class DirButtons extends React.Component<DirButtonsProps, DirButtonsState> {
   componentDidMount(): void {
     window.addEventListener('mousedown', (e) => {
       const target = e.target as HTMLElement
-      console.log(target)
       if (target.className !== 'dir_folders_btn') {
         this.setState({ selected_dir: NaN })
       }

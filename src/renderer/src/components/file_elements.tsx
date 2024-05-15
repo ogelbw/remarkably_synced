@@ -4,11 +4,11 @@ import React from 'react'
 export enum FileType {
   pdf = 'pdf',
   ebook = 'ebook',
-  notebook = 'notebook',
+  notebook = 'notebook'
 }
 
-class FileElements extends React.Component<FileElementProps, FileElementState> {
-  constructor(props) {
+class FileElements extends React.Component<FileElementsProps, FileElementState> {
+  constructor(props: FileElementsProps) {
     super(props)
     this.state = { files: this.props.files, selected_index: NaN }
   }
@@ -22,9 +22,9 @@ class FileElements extends React.Component<FileElementProps, FileElementState> {
     })
   }
 
-  add_file(file_name: string, type: FileType): void {
+  add_file(file_name: string, type: FileType, file_hash: string): void {
     const new_files = this.state.files
-    new_files.push({ name: file_name, type: type, last_synced: Date.now() })
+    new_files.push({ name: file_name, type: type, last_synced: Date.now(), file_hash })
     this.setState({ files: new_files })
   }
 
@@ -39,6 +39,7 @@ class FileElements extends React.Component<FileElementProps, FileElementState> {
         {this.state.files.map((file, i) => (
           <div
             key={i}
+            id={file.file_hash}
             className={'FileElement' + (i === this.state.selected_index ? ' selected' : '')}
             onClick={() => {
               this.setState({ selected_index: i })
@@ -60,10 +61,10 @@ class FileElements extends React.Component<FileElementProps, FileElementState> {
 }
 
 export default FileElements
-export interface FileElementProps {
-  files: { name: string; type: string; last_synced: number }[]
+export interface FileElementsProps {
+  files: { name: string; type: string; last_synced: number; file_hash: string }[]
 }
 export interface FileElementState {
-  files: { name: string; type: string; last_synced: number }[]
+  files: { name: string; type: string; last_synced: number; file_hash: string }[]
   selected_index: number
 }
