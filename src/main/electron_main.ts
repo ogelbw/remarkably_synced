@@ -2,12 +2,20 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { Remarkable_files } from './remarkable_2'
-import { get_sync_directory, set_sync_directory } from './ipc_functions'
+import { Remarkable2_files } from './remarkable_2'
+import { get_sync_directory, set_sync_directory, get_children_at } from './ipc_functions'
+import { existsSync } from 'fs'
+
+let local_files: Remarkable2_files
+let mainWindow: BrowserWindow
+
+let file_sync_path: string = ''
+let template_sync_path: string = ''
+let splashscreen_sync_path: string = ''
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -18,10 +26,6 @@ function createWindow(): void {
       sandbox: false,
       contextIsolation: true
     }
-  })
-
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -73,11 +77,77 @@ app.whenReady().then(() => {
     return get_sync_directory('splashscreen')
   })
 
+  // local file system intractions
+  ipcMain.handle('get_children_at', async (_, dir_hash: string) => {
+    return get_children_at(dir_hash, local_files)
+  })
+
   createWindow()
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  mainWindow.once('ready-to-show', () => {
+    /** check if all the sync directories are set */
+    mainWindow.show()
+    file_sync_path = get_sync_directory('file')
+    template_sync_path = get_sync_directory('template')
+    splashscreen_sync_path = get_sync_directory('splashscreen')
+    if (file_sync_path === '') {
+      mainWindow.webContents.send('alert', 'file sync path not set')
+      return
+    }
+    if (template_sync_path === '') {
+      mainWindow.webContents.send('alert', 'template sync path not set')
+      return
+    }
+    if (splashscreen_sync_path === '') {
+      mainWindow.webContents.send('alert', 'splashscreen sync path not set')
+      return
+    }
+
+    /** now check the key files */
+    if (!existsSync(join(template_sync_path, 'templates.json'))) {
+      mainWindow.webContents.send('alert', 'Templates not synced, please sync with device.')
+      return
+    }
+    /**  check the splashscreen files */
+    if (!existsSync(join(template_sync_path, 'suspended.png'))) {
+      mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
+      return
+    }
+    if (!existsSync(join(template_sync_path, 'poweroff.png'))) {
+      mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
+      return
+    }
+    if (!existsSync(join(template_sync_path, 'rebooting.png'))) {
+      mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
+      return
+    }
+    if (!existsSync(join(template_sync_path, 'overheating.png'))) {
+      mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
+      return
+    }
+    if (!existsSync(join(template_sync_path, 'batteryempty.png'))) {
+      mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
+      return
+    }
+
+    /** try to load local files */
+    local_files = new Remarkable2_files(
+      get_sync_directory('template'),
+      get_sync_directory('splashscreen'),
+      get_sync_directory('file')
+    )
+
+    // debug prints
+    Promise.all(Array.from(local_files.directory_lookup.keys())).then((keys) => {
+      keys.forEach((key) => {
+        console.log(`key: ${key} value: ${local_files.directory_lookup.get(key)}`)
+      })
+    })
   })
 })
 
@@ -88,16 +158,4 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
-})
-
-const c = new Remarkable_files(
-  '/home/ogelbw/.config/remarkable_synced_files/templates/',
-  '/home/ogelbw/.config/remarkable_synced_files/splashscreens/',
-  '/home/ogelbw/.config/remarkable_synced_files/notes/'
-)
-
-Promise.all(Array.from(c.directory_lookup.keys())).then((keys) => {
-  keys.forEach((key) => {
-    console.log(`key: ${key} value: ${c.directory_lookup.get(key)}`)
-  })
 })

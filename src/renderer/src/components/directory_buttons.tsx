@@ -1,50 +1,39 @@
 import FolderSVG from '@renderer/assets/folder'
-import React from 'react'
 
-class DirButtons extends React.Component<DirButtonsProps, DirButtonsState> {
-  constructor(props) {
-    super(props)
-    this.state = { dir_names: this.props.dir_names, selected_dir: NaN }
-  }
-
-  componentDidMount(): void {
-    window.addEventListener('mousedown', (e) => {
-      const target = e.target as HTMLElement
-      if (target.className !== 'dir_folders_btn') {
-        this.setState({ selected_dir: NaN })
-      }
-    })
-  }
-
-  add_dir_name(dir_name: string): void {
-    this.setState({ dir_names: [...this.state.dir_names, dir_name] })
-  }
-
-  render(): React.ReactNode {
-    return (
-      <div className="dir_folders">
-        {this.state.dir_names.map((dir, i) => (
-          <button
-            className={'dir_folders_btn' + (i === this.state.selected_dir ? ' selected' : '')}
-            key={i}
-            onClick={() => {
-              this.setState({ selected_dir: i })
-            }}
-          >
-            <FolderSVG />
-            <p>{dir}</p>
-          </button>
-        ))}
-      </div>
-    )
-  }
+export function DirButtons(props: DirButtonsProps): JSX.Element {
+  return (
+    <div className="dir_folders">
+      {props.dirs.map((dir, i) => (
+        <button
+          id="dir_btn"
+          className={'dir_folders_btn' + (i === props.container_selected_index ? ' selected' : '')}
+          key={i}
+          onClick={() => {
+            props.set_selected_hash(dir.hash)
+            props.set_file_selected_index(NaN)
+            props.set_container_selected_index(i)
+          }}
+        >
+          <FolderSVG id="dir_btn" />
+          <p id="dir_btn">{dir.name}</p>
+        </button>
+      ))}
+    </div>
+  )
 }
 
-export default DirButtons
 export interface DirButtonsProps {
-  dir_names: string[]
+  dirs: {
+    name: string
+    hash: string
+  }[]
+  set_selected_hash: CallableFunction
+  set_file_selected_index: CallableFunction
+  set_container_selected_index: CallableFunction
+  container_selected_index: number
+  /** @todo add this functionally */
+  set_current_container: CallableFunction
 }
 export interface DirButtonsState {
-  dir_names: string[]
-  selected_dir: number
+  dirs: { name: string; hash: string }[]
 }

@@ -1,6 +1,6 @@
 import BurgerMenuSVG from '@renderer/assets/burger_menu'
 
-function Header(props: HeaderProps): JSX.Element {
+export function Header(props: HeaderProps): JSX.Element {
   return (
     <div
       style={{
@@ -50,4 +50,3 @@ function Header(props: HeaderProps): JSX.Element {
 export interface HeaderProps {
   burger_menu_clicked: () => void
 }
-export default Header

@@ -2,6 +2,10 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 // import { remarkable_file_node, remarkable_directory, remarkable_template } from '../main/remarkable_2'
 
+// FIXME: The following is a workaround to prevent multiple listeners since for some reason
+// the listener is added multiple times. (I think its because of react)
+let Listeners_added = false
+
 // Custom APIs for renderer
 export const api = {
   // config directory getters and setters
@@ -25,24 +29,20 @@ export const api = {
   },
 
   // TODO everything below this line
-  /** Get all the files names+hashes in a directory on the device. */
-  get_device_files: (dir_hash: string): Promise<{ name: string; hash: string }[]> => {
+  /** Get all the children at a container hash. */
+  get_children_at: (dir_hash: string): Promise<{ name: string; hash: string; type: string }[]> => {
     return ipcRenderer.invoke('get-device-files', dir_hash)
   },
-  /** Get the name and hash of a directory on the device. */
-  get_device_dirs: (dir_hash: string): Promise<{ name: string; hash: string }[]> => {
-    return ipcRenderer.invoke('get-device-dirs', dir_hash)
-  },
 
-  /** Download all the files on the device */
+  /** Download all the files on the device, Returns if it was successful. */
   download_files: (): Promise<boolean> => {
     return ipcRenderer.invoke('download-files')
   },
-  /** Download all the templates on the device */
+  /** Download all the templates on the device, Returns if it was successful.*/
   download_templates: (): Promise<boolean> => {
     return ipcRenderer.invoke('download-templates')
   },
-  /** Download all the splashscreens on the device */
+  /** Download all the splashscreens on the device, Returns if it was successful. */
   download_splashscreens: (): Promise<boolean> => {
     return ipcRenderer.invoke('download-splashscreens')
   },
@@ -57,6 +57,14 @@ export const api = {
   /** Send all backed up splashscreen to the device from this machine. */
   upload_splashscreens: (): Promise<boolean> => {
     return ipcRenderer.invoke('upload-splashscreens')
+  },
+
+  /** Main to Render */
+  onAlert: (callback): void => {
+    if (!Listeners_added) {
+      ipcRenderer.on('alert', (_event, message) => callback(message))
+      Listeners_added = true
+    }
   }
 }
 

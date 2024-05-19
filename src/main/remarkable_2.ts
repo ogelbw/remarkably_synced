@@ -79,7 +79,7 @@ export interface remarkable_directory extends remarkable_file_node {
  * alterations to files on the device, such as uploading a template or notebook should be done
  * through this class and then uploaded to the device using the provided methods.
  */
-class Remarkable2_files {
+export class Remarkable2_files {
   public templates: remarkable_template[] = []
   files = new Map<string, remarkable_file_node>()
   /** Maps a directory name to a id hash */
@@ -112,6 +112,11 @@ class Remarkable2_files {
       children: []
     } as remarkable_directory)
     this.directory_lookup.set('root', '')
+
+    console.log(`Template directory: ${template_directory}`)
+    console.log(`Splashscreen directory: ${splashscreen_directory}`)
+    console.log(`Files directory: ${files_directory}`)
+
     this.parse_files(files_directory)
     this.parse_templates(template_directory)
     this.parse_splashscreens(splashscreen_directory)
@@ -253,7 +258,7 @@ class Remarkable2_files {
  * @description Represents an SSH connection to a reMarkable 2 device and provides utility methods
  * for interacting with the device.
  */
-class Remarkable2_device {
+export class Remarkable2_device {
   private client: Client
   private username: string
   private address: string
@@ -540,6 +545,3 @@ class Remarkable2_device {
     return Promise.resolve()
   }
 }
-
-export const Remarkable_device = Remarkable2_device
-export const Remarkable_files = Remarkable2_files

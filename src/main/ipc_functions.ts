@@ -1,6 +1,7 @@
 import { app, dialog } from 'electron/main'
 import { join } from 'node:path'
 import fs from 'fs'
+import { Remarkable2_files } from './remarkable_2'
 
 export function set_sync_directory(
   directory: 'file' | 'template' | 'splashscreen'
@@ -22,9 +23,9 @@ export function set_sync_directory(
       fs.writeFileSync(join(app.getPath('userData'), 'syncing_config.json'), JSON.stringify(config))
     } else {
       const blank_config = {
-        files_directory: '',
-        template_directory: '',
-        splashscreen_directory: ''
+        file: '',
+        template: '',
+        splashscreen: ''
       }
       blank_config[directory] = result.filePaths[0]
 
@@ -52,9 +53,9 @@ export function get_sync_directory(directory: 'file' | 'template' | 'splashscree
     return config[directory]
   } else {
     const blank_config = {
-      files_directory: '',
-      template_directory: '',
-      splashscreen_directory: ''
+      file: '',
+      template: '',
+      splashscreen: ''
     }
     fs.writeFileSync(
       join(app.getPath('userData'), 'syncing_config.json'),
@@ -62,4 +63,13 @@ export function get_sync_directory(directory: 'file' | 'template' | 'splashscree
     )
     return ''
   }
+}
+
+export function get_children_at(
+  container_hash: string,
+  files: Remarkable2_files
+): { name: string; hash: string; type: string }[] {
+  console.log(container_hash)
+  console.log(files.directory_lookup)
+  return []
 }
