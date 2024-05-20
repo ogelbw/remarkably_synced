@@ -27,6 +27,66 @@ export const api = {
   get_splashscreen_download_directory: (): Promise<string> => {
     return ipcRenderer.invoke('get-splashscreen-directory')
   },
+  set_device_password: (): Promise<boolean> => {
+    return ipcRenderer.invoke('set-device-password')
+  },
+  get_previous_address: (): Promise<string> => {
+    return ipcRenderer.invoke('get-previous-address')
+  },
+  set_previous_address: (address: string): Promise<boolean> => {
+    return ipcRenderer.invoke('set-previous-address', address)
+  },
+
+  /** Download all the files on the device, Returns if it was successful. */
+  download_files: (): Promise<boolean> => {
+    return ipcRenderer.invoke('download-files')
+  },
+  onDownloadFilesComplete(callback): void {
+    if (!Listeners_added) {
+      ipcRenderer.on('download-files-complete', () => callback())
+      Listeners_added = true
+    }
+  },
+
+  /** Download all the templates on the device, Returns if it was successful.*/
+  download_templates: (): Promise<boolean> => {
+    return ipcRenderer.invoke('download-templates')
+  },
+  onDownloadTemplatesComplete(callback): void {
+    if (!Listeners_added) {
+      ipcRenderer.on('download-templates-complete', () => callback())
+      Listeners_added = true
+    }
+  },
+
+  /** Download all the splashscreens on the device, Returns if it was successful. */
+  download_splashscreens: (): Promise<boolean> => {
+    return ipcRenderer.invoke('download-splashscreens')
+  },
+  onDownloadSplashscreensComplete(callback): void {
+    if (!Listeners_added) {
+      ipcRenderer.on('download-splashscreens-complete', () => callback())
+      Listeners_added = true
+    }
+  },
+
+  connect_to_device: (): Promise<boolean> => {
+    return ipcRenderer.invoke('connect-to-device')
+  },
+
+  onDeviceConnected: (callback): void => {
+    if (!Listeners_added) {
+      ipcRenderer.on('device-connected', () => callback())
+      Listeners_added = true
+    }
+  },
+
+  onDeviceDisconnected: (callback): void => {
+    if (!Listeners_added) {
+      ipcRenderer.on('device-disconnected', () => callback())
+      Listeners_added = true
+    }
+  },
 
   // TODO everything below this line
   /** Get all the children at a container hash. */
@@ -34,18 +94,6 @@ export const api = {
     return ipcRenderer.invoke('get-device-files', dir_hash)
   },
 
-  /** Download all the files on the device, Returns if it was successful. */
-  download_files: (): Promise<boolean> => {
-    return ipcRenderer.invoke('download-files')
-  },
-  /** Download all the templates on the device, Returns if it was successful.*/
-  download_templates: (): Promise<boolean> => {
-    return ipcRenderer.invoke('download-templates')
-  },
-  /** Download all the splashscreens on the device, Returns if it was successful. */
-  download_splashscreens: (): Promise<boolean> => {
-    return ipcRenderer.invoke('download-splashscreens')
-  },
   /** Send all backed up files to the device from this machine. */
   upload_files: (): Promise<boolean> => {
     return ipcRenderer.invoke('upload-files')

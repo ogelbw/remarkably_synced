@@ -1,7 +1,7 @@
 :root {
   --ev-c-white: #ffffff;
   --ev-c-white-soft: #F3EFE7;
-  --ev-c-white-mute: #ede8de;;
+  --ev-c-white-mute: #ede8de;
 
   --ev-c-black: #1b1b1f;
   --ev-c-black-soft: #222222;
@@ -13,6 +13,7 @@
     --ev-c-background-soft: var(--ev-c-black-soft);
     --ev-c-text-1: var(--ev-c-white);
     --ev-c-text-2: var(--ev-c-white-mute);
+    --ev-c-text-subtext: rgba(255, 255, 255, 0.65);
     --ev-c-button-alt: var(--ev-c-black-soft);
     --ev-c-button-alt-hover: var(--ev-c-black-mute);
   }
@@ -23,6 +24,7 @@
     --ev-c-background-soft: var(--ev-c-white-soft);
     --ev-c-text-1: var(--ev-c-black);
     --ev-c-text-2: var(--ev-c-black-mute);
+    --ev-c-text-subtext: rgba(0, 0, 0, 0.65);
     --ev-c-button-alt: var(--ev-c-white-soft);
     --ev-c-button-alt-hover: var(--ev-c-white-mute);
   }

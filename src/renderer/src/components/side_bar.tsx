@@ -1,13 +1,18 @@
 export interface Main_nav_menuProps {
-  list_items: [string, CallableFunction][]
+  list_items: {
+    title: string | JSX.Element
+    sub_text: string
+    action: CallableFunction
+  }[]
   open: boolean
 }
 
 export function Side_menu(props: Main_nav_menuProps): JSX.Element {
   const list_items = props.list_items.map((item, index) => {
     return (
-      <li className="Main_nav_item" key={index} onClick={() => item[1]()}>
-        {item[0]}
+      <li id="main_nav_menu" className="Main_nav_item" key={index} onClick={() => item.action()}>
+        {item.title}
+        <p id="main_nav_menu">{item.sub_text}</p>
       </li>
     )
   })
@@ -17,7 +22,7 @@ export function Side_menu(props: Main_nav_menuProps): JSX.Element {
       id="main_nav_menu"
       className="main_nav_menu"
       style={{
-        width: '250px',
+        width: '350px',
         backgroundColor: 'var(--ev-c-background-mute)',
         height: '100vh',
         position: 'absolute',
@@ -29,6 +34,7 @@ export function Side_menu(props: Main_nav_menuProps): JSX.Element {
       }}
     >
       <ul
+        id="main_nav_menu"
         style={{
           listStyleType: 'none',
           margin: '0',

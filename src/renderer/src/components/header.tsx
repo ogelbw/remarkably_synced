@@ -15,38 +15,72 @@ export function Header(props: HeaderProps): JSX.Element {
       }}
     >
       {/* Burger menu button start */}
-      <button
-        id="burger_menu_button"
-        style={{
-          display: 'flex',
-          placeItems: 'center center',
-          height: '40px',
-          margin: '10px',
-          backgroundSize: '30px',
-          borderRadius: '20px',
-          padding: '8px',
-          paddingLeft: '15px',
-          paddingRight: '15px'
-        }}
-        onClick={props.burger_menu_clicked}
-      >
-        <BurgerMenuSVG />
-        <span
+      <div style={{ display: 'flex', placeItems: 'center center' }}>
+        <button
           id="burger_menu_button"
           style={{
-            marginLeft: '10px',
-            fontSize: '15px',
-            color: 'var(--ev-c-text-soft)'
+            display: 'flex',
+            placeItems: 'center center',
+            height: '40px',
+            margin: '10px',
+            backgroundSize: '30px',
+            borderRadius: '20px',
+            padding: '8px',
+            paddingLeft: '15px',
+            paddingRight: '15px'
+          }}
+          onClick={props.burger_menu_clicked}
+        >
+          <BurgerMenuSVG />
+          <span
+            id="burger_menu_button"
+            style={{
+              marginLeft: '10px',
+              fontSize: '15px',
+              color: 'var(--ev-c-text-soft)'
+            }}
+          >
+            Menu
+          </span>
+        </button>
+        {/* Burger menu button end */}
+        <input
+          onKeyDownCapture={(e) => {
+            if (e.key === 'Enter') {
+              window.app_api.set_previous_address(e.currentTarget.value)
+            }
+          }}
+          type="text"
+          name="device_address_input"
+          id="device_address_input"
+          placeholder={props.previous_address}
+        />
+        <button
+          onClick={window.app_api.connect_to_device}
+          style={{ backgroundColor: 'var(--ev-c-background-mute)' }}
+        >
+          Connect
+        </button>
+      </div>
+
+      {/* Download button start */}
+      <div>
+        <button>Upload files</button>
+        <button
+          onClick={() => {
+            window.app_api.download_files()
+            window.app_api.download_templates()
+            window.app_api.download_splashscreens()
           }}
         >
-          Menu
-        </span>
-      </button>
-      {/* Burger menu button end */}
+          Download device
+        </button>
+      </div>
     </div>
   )
 }
 
 export interface HeaderProps {
   burger_menu_clicked: () => void
+  previous_address: string
 }

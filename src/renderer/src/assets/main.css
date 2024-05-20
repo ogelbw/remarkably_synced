@@ -101,13 +101,29 @@ code {
   }
 }
 
+input {
+  background-color: var(--ev-c-background-mute);
+  border: none;
+  padding: 1em 2em;
+  border-radius: 5px;
+  color: var(--ev-c-text-1);
+  transition: background-color 0.3s ease 0s;
+  height: 10px;
+}
+
 .Main_nav_item{
   font-size: 20px;
   padding: 20px;
-  padding-top: 10px;
+  margin-top: 20px;
+  padding-top: 0px;
   padding-bottom: 10px;
   cursor: pointer;
   transition: background-color 0.3s ease 0s;
+}
+.Main_nav_item p {
+  margin: 0;
+  color: var(--ev-c-text-subtext);
+  font-size: 10px;
 }
 .Main_nav_item:hover{
   color: var(--ev-c-text-2);
@@ -211,6 +227,10 @@ code {
   border-radius: 5px;
   justify-content: end;
   margin-right: 40px;
+}
+
+.SelectedActions button{
+  font-size: 15px;
 }
 
 .PathActions{

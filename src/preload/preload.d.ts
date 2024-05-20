@@ -43,9 +43,26 @@ declare global {
       /** Send all backed up splashscreen to the device from this machine. */
       upload_splashscreens: () => Promise<boolean>
 
+      /** Set the device root password */
+      set_device_password: () => Promise<boolean>
+
+      /** Get the previous address */
+      get_previous_address: () => Promise<string>
+
+      /** Set the previous address */
+      set_previous_address: (address: string) => Promise<boolean>
+
+      /** Try to establish a connection to the device */
+      connect_to_device: () => Promise<boolean>
+
       /** ================== Main to Render ================== */
       /** Create an alert on the application window. */
       onAlert: (callback: (msg: string) => void) => void
+      onDeviceConnected: (callback: () => void) => void
+      onDeviceDisconnected: (callback: () => void) => void
+      onDownloadFilesComplete: (callback: () => void) => void
+      onDownloadTemplatesComplete: (callback: () => void) => void
+      onDownloadSplashscreensComplete: (callback: () => void) => void
     }
   }
 }

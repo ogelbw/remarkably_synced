@@ -269,7 +269,8 @@ export class Remarkable2_device {
     address: string,
     password: string,
     connection_connected_callback: CallableFunction,
-    connection_failed_callback: CallableFunction
+    connection_failed_callback: CallableFunction,
+    connection_end_callback: CallableFunction
   ) {
     this.client = new Client()
     this.username = username
@@ -283,6 +284,7 @@ export class Remarkable2_device {
       })
       .on('error', (err) => {
         console.log('Client :: end')
+        this.client.end()
         connection_failed_callback(err)
       })
       .on('connect', () => {
@@ -292,6 +294,11 @@ export class Remarkable2_device {
         host: this.address,
         username: this.username,
         password: this.password
+      })
+      .on('close', () => {
+        console.log('Client :: close')
+        this.client.end()
+        connection_end_callback()
       })
   }
 
@@ -361,11 +368,15 @@ export class Remarkable2_device {
    * user data directory by default).
    * @returns A promise that resolves when the file has been downloaded.
    */
-  public download_file(path: string, destination: string = app.getPath('appData')): Promise<void> {
+  public download_file(
+    path: string,
+    destination: string = app.getPath('appData'),
+    split_override: string = 'remarkable'
+  ): Promise<void> {
     if (destination === app.getPath('appData')) {
       destination = join(destination, 'remarkable_synced_files')
     }
-    destination = join(destination, path.split('remarkable')[1])
+    destination = join(destination, path.split(split_override)[1])
     return new Promise<void>((resolve, reject) => {
       console.log(`Downloading ${path} from device to ${destination} locally...`)
 
@@ -488,12 +499,10 @@ export class Remarkable2_device {
    * user data directory by default).
    * @returns A promise that resolves when the templates have been downloaded.
    */
-  public Download_templates_from_device(
-    destination: string = app.getPath('appData')
-  ): Promise<void[]> {
+  public Download_templates(destination: string = app.getPath('appData')): Promise<void[]> {
     // Download the templates.json file
     console.log(`Downloading templates.json to ${destination}...`)
-    this.download_file('/usr/share/remarkable/templates/templates.json', destination)
+    this.download_file('/usr/share/remarkable/templates/templates.json', destination, 'templates')
 
     // get the list of files in the templates directory and download any images
     return this.ls('/usr/share/remarkable/templates', null).then((files) => {
@@ -515,7 +524,7 @@ export class Remarkable2_device {
    * user data directory by default).
    * @returns A promise that resolves when the splashscreens have been downloaded.
    */
-  public Download_splashscreens_from_device(
+  public Download_splashscreens(
     destination: string = join(app.getPath('appData'), 'remarkable_synced_files', 'splashscreens')
   ): Promise<void[]> {
     // get the list of files in the splashscreens directory and download any images
@@ -538,10 +547,9 @@ export class Remarkable2_device {
    * user data directory by default).
    * @returns A promise that resolves when the files have been downloaded.
    */
-  public Download_all_sheets_from_device(
+  public Download_note_files(
     destination: string = join(app.getPath('appData'), 'remarkable_synced_files', 'notes')
   ): Promise<void> {
-    this.recursive_download('/home/root/.local/share/remarkable/xochitl/', destination)
-    return Promise.resolve()
+    return this.recursive_download('/home/root/.local/share/remarkable/xochitl/', destination)
   }
 }
