@@ -9,9 +9,12 @@ export function Header(props: HeaderProps): JSX.Element {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '0 20px',
+        padding: '0 0',
         backgroundColor: 'var(--ev-c-background-soft)',
-        marginBottom: '20px'
+        marginBottom: '20px',
+        position: 'fixed',
+        top: '0',
+        left: '0'
       }}
     >
       {/* Burger menu button start */}
@@ -57,7 +60,11 @@ export function Header(props: HeaderProps): JSX.Element {
         />
         <button
           onClick={window.app_api.connect_to_device}
-          style={{ backgroundColor: 'var(--ev-c-background-mute)' }}
+          style={{ 
+            backgroundColor: 'var(--ev-c-background-mute)',
+            height: '37px',
+            marginLeft: '10px'
+          }}
         >
           Connect
         </button>
@@ -68,9 +75,9 @@ export function Header(props: HeaderProps): JSX.Element {
         <button>Upload files</button>
         <button
           onClick={() => {
-            window.app_api.download_files()
+            // window.app_api.download_files()
             window.app_api.download_templates()
-            window.app_api.download_splashscreens()
+            // window.app_api.download_splashscreens()
           }}
         >
           Download device

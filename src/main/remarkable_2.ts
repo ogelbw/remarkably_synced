@@ -180,7 +180,14 @@ export class Remarkable2_files {
 
       switch (file_type) {
         case 'CollectionType':
-          ;(file_object as remarkable_directory).children = []
+          // if this directory is already known, takes it's children and add them to the new object
+          if (!this.files.has(file_hash)) {
+            ;(file_object as remarkable_directory).children = []
+          } else {
+            ;(file_object as remarkable_directory).children = (
+              this.files.get(file_hash) as remarkable_directory
+            ).children
+          }
           this.files.set(file_hash, file_object)
           this.directory_lookup.set(file_object.visibleName, file_hash)
           break
@@ -201,54 +208,18 @@ export class Remarkable2_files {
           parent.children.push(this.files.get(file_hash) as remarkable_file_node)
         }
       } else {
-        // otherwise, repeatedly check the parent's parent from the metadata files until the root
-        // is found, all files should reach the root eventually
-        let current_parent = parent_directory
-        const files_to_add: remarkable_directory[] = []
-        for (;;) {
-          if (current_parent === 'trash') {
-            // in the case we somehow reach the trash directory, break the loop so the files are
-            // not added to the actual file structure
-            break
-          }
-          let reconstruction_start = ''
-          if (current_parent !== '') {
-            if (!this.files.has(current_parent)) {
-              const parent_metadata = JSON.parse(
-                fs.readFileSync(join(files_directory, `${current_parent}.metadata`)).toString()
-              ) as remarkable_directory
-              parent_metadata.file_hash = current_parent
-              parent_metadata.children = []
-              files_to_add.push(parent_metadata)
-              current_parent = parent_metadata.parent
-            } else {
-              reconstruction_start = current_parent
-              current_parent = ''
-            }
-          } else {
-            // when the directory's parent is the root or a known directory,
-            // add the directory to the starting point and construct the rest
-            // of the collected directories until the original directory is reached.
-            // we can do this as if the node is a parent it therefore must be a directory.
-            const temp_directory = files_to_add.pop() as remarkable_directory
-            temp_directory.parent = current_parent
-            temp_directory.children = []
-            ;(this.files.get(reconstruction_start) as remarkable_directory).children.push(
-              temp_directory
-            )
-            this.files.set(temp_directory.file_hash, temp_directory)
-            this.directory_lookup.set(temp_directory.visibleName, temp_directory.file_hash)
-
-            while (files_to_add.length > 0) {
-              const current_directory = files_to_add.pop() as remarkable_directory
-              const parent = this.files.get(current_directory.parent) as remarkable_directory
-              parent.children.push(current_directory)
-              this.files.set(current_directory.file_hash, current_directory)
-              this.directory_lookup.set(current_directory.visibleName, current_directory.file_hash)
-            }
-            break
-          }
-        }
+        // if the current parent is not known, make a new parent
+        this.files.set(parent_directory, {
+          children: [],
+          createdTime: '',
+          lastModified: '',
+          parent: '',
+          pinned: false,
+          type: '',
+          visibleName: '',
+          file_hash: parent_directory
+        } as remarkable_directory)
+        ;(this.files.get(parent_directory) as remarkable_directory).children.push(file_object)
       }
     })
   }
@@ -502,7 +473,7 @@ export class Remarkable2_device {
   public Download_templates(destination: string = app.getPath('appData')): Promise<void[]> {
     // Download the templates.json file
     console.log(`Downloading templates.json to ${destination}...`)
-    this.download_file('/usr/share/remarkable/templates/templates.json', destination, 'templates')
+    this.download_file('/usr/share/remarkable/templates/templates.json', destination, 'templates/')
 
     // get the list of files in the templates directory and download any images
     return this.ls('/usr/share/remarkable/templates', null).then((files) => {
@@ -511,7 +482,9 @@ export class Remarkable2_device {
         return file.endsWith('.png')
       })
       files.forEach((file) => {
-        promises.push(this.download_file('/usr/share/remarkable/templates/' + file, destination))
+        promises.push(
+          this.download_file('/usr/share/remarkable/templates/' + file, destination, 'templates/')
+        )
       })
       return Promise.all(promises)
     })

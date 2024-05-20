@@ -22,9 +22,6 @@ declare global {
       /** Get the directory where the splashscreens are stored. (from config file) */
       get_splashscreen_download_directory: () => Promise<string>
 
-      /** Get all the children at a container hash. */
-      get_children_at: (dir_hash: string) => Promise<{ name: string; hash: string; type: string }[]>
-
       /** Download all the files on the device */
       download_files: () => Promise<boolean>
 
@@ -55,6 +52,12 @@ declare global {
       /** Try to establish a connection to the device */
       connect_to_device: () => Promise<boolean>
 
+      /** Get the children from a directory hash on the local computer */
+      get_children_at: (dir_hash: string) => Promise<remarkable_file_node[]>
+
+      /** Get the in order container nodes to a file */
+      get_path_to_hash: (hash: string) => Promise<remarkable_file_node[]>
+
       /** ================== Main to Render ================== */
       /** Create an alert on the application window. */
       onAlert: (callback: (msg: string) => void) => void
@@ -63,6 +66,9 @@ declare global {
       onDownloadFilesComplete: (callback: () => void) => void
       onDownloadTemplatesComplete: (callback: () => void) => void
       onDownloadSplashscreensComplete: (callback: () => void) => void
+
+      /** Fired when the files locally on the computer have been parsed */
+      onFilesReady: (callback: () => void) => void
     }
   }
 }

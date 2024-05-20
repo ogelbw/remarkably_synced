@@ -16,6 +16,5 @@ export function SelectedActions(props: SelectedActionsProps): JSX.Element {
 }
 
 export interface SelectedActionsProps {
-  current_container: string
   hash_selected: string
 }

@@ -6,21 +6,33 @@ import { FileElements } from './components/file_elements'
 import { SelectedActions } from './components/Selected_actions'
 import { useEffect, useState } from 'react'
 
+export interface remarkable_file_node {
+  createdTime: string
+  lastModified: string
+  parent: string
+  pinned: boolean
+  type: string
+  visibleName: string
+  file_hash: string
+}
+
+export interface remarkable_directory extends remarkable_file_node {
+  children: remarkable_file_node[]
+}
+
 function App(): JSX.Element {
   const [is_side_menu_open, set_side_menu_open] = useState<boolean>(false)
   const [selected_hash, set_selected_hash] = useState<string>('')
-  const [current_container, set_current_container] = useState<string>('')
   const [file_selected_index, set_file_selected_index] = useState<number>(NaN)
   const [container_selected_index, set_container_selected_index] = useState<number>(NaN)
   const [file_download_dir, set_file_download_dir] = useState<string>('')
   const [template_download_dir, set_template_download_dir] = useState<string>('')
   const [splashscreen_download_dir, set_splashscreen_download_dir] = useState<string>('')
   const [previous_address, set_previous_address] = useState<string>('Device address')
-
-  /** Spawn an Alert */
-  window.app_api.onAlert((msg) => {
-    alert(msg)
-  })
+  const [displayed_files, set_displayed_files] = useState<remarkable_file_node[]>([])
+  const [displayed_directories, set_displayed_directories] = useState<remarkable_directory[]>([])
+  const [activate_container, set_activate_container] = useState<string>('')
+  const [container_path, set_container_path] = useState<[string, string][]>([['Home', '']])
 
   /** Event to close the side menu or de-select anything active */
   window.addEventListener('mousedown', (e) => {
@@ -52,11 +64,49 @@ function App(): JSX.Element {
     })
   }
 
-  /** on mount call get download dirs */
+  async function update_current_displayed_childen(container_override?: string): Promise<void> {
+    const container_hash = container_override
+      ? container_override === 'home'
+        ? ''
+        : container_override
+      : activate_container
+    const children = await window.app_api.get_children_at(container_hash)
+
+    /** Updating ths displayed files and dirs */
+    const child_dirs: remarkable_directory[] = []
+    const child_files: remarkable_file_node[] = []
+    children.forEach((child: remarkable_file_node) => {
+      if (child.type === 'CollectionType') {
+        const dir = child as remarkable_directory
+        dir.children = []
+        child_dirs.push(dir)
+      } else {
+        child_files.push(child)
+      }
+    })
+    set_displayed_directories(child_dirs)
+    set_displayed_files(child_files)
+
+    /** updating the file path at the top of the page */
+    const path = await window.app_api.get_path_to_hash(container_hash)
+    console.log(`dir path:  ${path}`)
+    console.log(`Container hash:  ${container_hash}`)
+    set_container_path(
+      path.map((node) => [node.visibleName === 'root' ? 'Home' : node.visibleName, node.file_hash])
+    )
+  }
+
+  /** on mount */
   useEffect(() => {
     get_download_dirs()
+    update_current_displayed_childen()
+    /** Spawn an Alert */
+    window.app_api.onAlert((msg) => {
+      alert(msg)
+    })
   }, [])
 
+  /** =========================== MAIN RENDER =========================== */
   return (
     <>
       <Header
@@ -104,28 +154,26 @@ function App(): JSX.Element {
       />
 
       <div className="PathActions">
-        <FilePath file_path={['Home', 'content']} />
-        <SelectedActions current_container={current_container} hash_selected={selected_hash} />
+        <FilePath
+          file_path={container_path}
+          update_current_displayed_childen={update_current_displayed_childen}
+          set_activate_directory={set_activate_container}
+        />
+        <SelectedActions hash_selected={selected_hash} />
       </div>
 
       <DirButtons
-        dirs={[
-          { name: 'Home', hash: 'hash4' },
-          { name: 'content', hash: 'hash5' }
-        ]}
+        dirs={displayed_directories}
         set_selected_hash={set_selected_hash}
         set_file_selected_index={set_file_selected_index}
         set_container_selected_index={set_container_selected_index}
         container_selected_index={container_selected_index}
-        set_current_container={set_current_container}
+        set_activate_directory={set_activate_container}
+        update_current_displayed_childen={update_current_displayed_childen}
       />
 
       <FileElements
-        files={[
-          { name: 'file1', type: 'pdf', last_synced: Date.now(), file_hash: 'hash1' },
-          { name: 'file2', type: 'ebook', last_synced: Date.now(), file_hash: 'hash2' },
-          { name: 'file3', type: 'notebook', last_synced: Date.now(), file_hash: 'hash3' }
-        ]}
+        files={displayed_files}
         file_selected_index={file_selected_index}
         set_selected_hash={set_selected_hash}
         set_file_selected_index={set_file_selected_index}

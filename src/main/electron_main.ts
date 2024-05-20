@@ -2,11 +2,15 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { Remarkable2_files, Remarkable2_device } from './remarkable_2'
+import {
+  Remarkable2_files,
+  Remarkable2_device,
+  remarkable_directory,
+  remarkable_file_node
+} from './remarkable_2'
 import {
   get_config_field,
   set_sync_directory,
-  get_children_at,
   set_device_password,
   set_previous_address
 } from './ipc_functions'
@@ -16,7 +20,6 @@ const prompt = require('electron-prompt')
 let device: Remarkable2_device
 let local_files: Remarkable2_files
 let mainWindow: BrowserWindow
-
 let file_sync_path: string = ''
 let template_sync_path: string = ''
 let splashscreen_sync_path: string = ''
@@ -105,7 +108,6 @@ app.whenReady().then(() => {
     }
     return splashscreen_sync_path
   })
-
   ipcMain.handle('set-device-password', async () => {
     prompt({
       title: 'Set device password',
@@ -128,12 +130,6 @@ app.whenReady().then(() => {
   ipcMain.handle('set-previous-address', async (_, address: string) => {
     return set_previous_address(address)
   })
-
-  // local file system intractions
-  ipcMain.handle('get_children_at', async (_, dir_hash: string) => {
-    return get_children_at(dir_hash, local_files)
-  })
-
   ipcMain.handle('connect-to-device', async () => {
     if (get_config_field('previous_address') === '') {
       mainWindow.webContents.send('alert', 'No previous address set')
@@ -158,6 +154,17 @@ app.whenReady().then(() => {
       )
       return true
     }
+  })
+  ipcMain.handle('get-path-to-hash', (_, hash: string) => {
+    const path: remarkable_file_node[] = []
+    while (hash !== '') {
+      const parent = local_files.files.get(hash) as remarkable_file_node
+      path.push(parent)
+      hash = parent.parent
+    }
+    path.push(local_files.files.get('') as remarkable_file_node)
+    console.log(`path: ${path}`)
+    return path.reverse()
   })
 
   const downloadFiles = async (syncPath: string, file_type: string): Promise<void> => {
@@ -210,6 +217,9 @@ app.whenReady().then(() => {
   ipcMain.handle('download-splashscreens', () => {
     downloadFiles(splashscreen_sync_path, 'splashscreens')
   })
+  ipcMain.handle('get-children-at', (_, hash: string) => {
+    return (local_files.files.get(hash) as remarkable_directory).children
+  })
 
   createWindow()
   app.on('activate', function () {
@@ -243,23 +253,23 @@ app.whenReady().then(() => {
       return
     }
     /**  check the splashscreen files */
-    if (!existsSync(join(template_sync_path, 'suspended.png'))) {
+    if (!existsSync(join(splashscreen_sync_path, 'suspended.png'))) {
       mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
       return
     }
-    if (!existsSync(join(template_sync_path, 'poweroff.png'))) {
+    if (!existsSync(join(splashscreen_sync_path, 'poweroff.png'))) {
       mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
       return
     }
-    if (!existsSync(join(template_sync_path, 'rebooting.png'))) {
+    if (!existsSync(join(splashscreen_sync_path, 'rebooting.png'))) {
       mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
       return
     }
-    if (!existsSync(join(template_sync_path, 'overheating.png'))) {
+    if (!existsSync(join(splashscreen_sync_path, 'overheating.png'))) {
       mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
       return
     }
-    if (!existsSync(join(template_sync_path, 'batteryempty.png'))) {
+    if (!existsSync(join(splashscreen_sync_path, 'batteryempty.png'))) {
       mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
       return
     }
@@ -270,12 +280,20 @@ app.whenReady().then(() => {
       get_config_field('splashscreen'),
       get_config_field('file')
     )
+    mainWindow.webContents.send('files-ready')
 
     // debug prints
     Promise.all(Array.from(local_files.directory_lookup.keys())).then((keys) => {
       keys.forEach((key) => {
         console.log(`key: ${key} value: ${local_files.directory_lookup.get(key)}`)
       })
+
+      const rootChildren = (local_files.files.get('') as remarkable_directory).children.map(
+        (child) => {
+          return child.visibleName
+        }
+      )
+      console.log(`Root children: ${rootChildren}`)
     })
   })
 })

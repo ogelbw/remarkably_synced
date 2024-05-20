@@ -1,10 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 // import { remarkable_file_node, remarkable_directory, remarkable_template } from '../main/remarkable_2'
-
-// FIXME: The following is a workaround to prevent multiple listeners since for some reason
-// the listener is added multiple times. (I think its because of react)
-let Listeners_added = false
+import { remarkable_file_node } from '../main/remarkable_2'
 
 // Custom APIs for renderer
 export const api = {
@@ -42,10 +39,7 @@ export const api = {
     return ipcRenderer.invoke('download-files')
   },
   onDownloadFilesComplete(callback): void {
-    if (!Listeners_added) {
-      ipcRenderer.on('download-files-complete', () => callback())
-      Listeners_added = true
-    }
+    ipcRenderer.on('download-files-complete', () => callback())
   },
 
   /** Download all the templates on the device, Returns if it was successful.*/
@@ -53,10 +47,7 @@ export const api = {
     return ipcRenderer.invoke('download-templates')
   },
   onDownloadTemplatesComplete(callback): void {
-    if (!Listeners_added) {
-      ipcRenderer.on('download-templates-complete', () => callback())
-      Listeners_added = true
-    }
+    ipcRenderer.on('download-templates-complete', () => callback())
   },
 
   /** Download all the splashscreens on the device, Returns if it was successful. */
@@ -64,10 +55,7 @@ export const api = {
     return ipcRenderer.invoke('download-splashscreens')
   },
   onDownloadSplashscreensComplete(callback): void {
-    if (!Listeners_added) {
-      ipcRenderer.on('download-splashscreens-complete', () => callback())
-      Listeners_added = true
-    }
+    ipcRenderer.on('download-splashscreens-complete', () => callback())
   },
 
   connect_to_device: (): Promise<boolean> => {
@@ -75,24 +63,28 @@ export const api = {
   },
 
   onDeviceConnected: (callback): void => {
-    if (!Listeners_added) {
-      ipcRenderer.on('device-connected', () => callback())
-      Listeners_added = true
-    }
+    ipcRenderer.on('device-connected', () => callback())
   },
 
   onDeviceDisconnected: (callback): void => {
-    if (!Listeners_added) {
-      ipcRenderer.on('device-disconnected', () => callback())
-      Listeners_added = true
-    }
+    ipcRenderer.on('device-disconnected', () => callback())
+  },
+
+  onFilesReady: (callback): void => {
+    ipcRenderer.on('files-ready', () => callback())
+  },
+
+  /** Get all the children at a container hash. */
+  get_children_at: (dir_hash: string): Promise<remarkable_file_node[]> => {
+    return ipcRenderer.invoke('get-children-at', dir_hash)
+  },
+
+  /** Get the path to a hash */
+  get_path_to_hash: (hash: string): Promise<remarkable_file_node[]> => {
+    return ipcRenderer.invoke('get-path-to-hash', hash)
   },
 
   // TODO everything below this line
-  /** Get all the children at a container hash. */
-  get_children_at: (dir_hash: string): Promise<{ name: string; hash: string; type: string }[]> => {
-    return ipcRenderer.invoke('get-device-files', dir_hash)
-  },
 
   /** Send all backed up files to the device from this machine. */
   upload_files: (): Promise<boolean> => {
@@ -109,10 +101,7 @@ export const api = {
 
   /** Main to Render */
   onAlert: (callback): void => {
-    if (!Listeners_added) {
-      ipcRenderer.on('alert', (_event, message) => callback(message))
-      Listeners_added = true
-    }
+    ipcRenderer.on('alert', (_event, message) => callback(message))
   }
 }
 

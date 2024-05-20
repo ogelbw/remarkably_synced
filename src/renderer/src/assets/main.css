@@ -12,8 +12,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
   background-size: cover;
+  overflow-x: hidden;
   user-select: none;
   margin: 0;
 }
@@ -104,11 +104,11 @@ code {
 input {
   background-color: var(--ev-c-background-mute);
   border: none;
-  padding: 1em 2em;
+  padding: 0em 1em;
   border-radius: 5px;
   color: var(--ev-c-text-1);
   transition: background-color 0.3s ease 0s;
-  height: 10px;
+  height: 37px;
 }
 
 .Main_nav_item{
@@ -191,6 +191,7 @@ input {
   place-items: center;
   width: calc(100vw - 100px);
   height: 50px;
+  min-height: 50px;
   overflow-x: auto;
   overflow-y: hidden;
   margin-left: 40px;
@@ -236,6 +237,7 @@ input {
 .PathActions{
   display: flex;
   width: 100%;
+  margin-top: 75px;
   align-items: center;
   justify-content: space-between;
 }

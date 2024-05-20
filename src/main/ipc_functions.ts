@@ -1,7 +1,6 @@
 import { app, dialog } from 'electron/main'
 import { join } from 'node:path'
 import fs from 'fs'
-import { Remarkable2_files } from './remarkable_2'
 
 function get_config(): {
   file: string
@@ -53,15 +52,6 @@ export function set_sync_directory(
     fs.writeFileSync(join(app.getPath('userData'), 'syncing_config.json'), JSON.stringify(config))
     return true
   })
-}
-
-export function get_children_at(
-  container_hash: string,
-  files: Remarkable2_files
-): { name: string; hash: string; type: string }[] {
-  console.log(container_hash)
-  console.log(files.directory_lookup)
-  return []
 }
 
 /** Reads the config file in the userdata directory and returns the path for the directory.

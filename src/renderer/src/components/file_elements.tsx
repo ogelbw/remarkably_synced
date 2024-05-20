@@ -1,3 +1,4 @@
+import { remarkable_file_node } from '@renderer/App'
 import BookSVG from '@renderer/assets/book'
 
 export enum RemarkableFileTypes {
@@ -22,9 +23,13 @@ export function FileElements(props: FileElementsProps): JSX.Element {
         >
           <BookSVG />
           <div style={{ display: 'block' }} id="file_ele">
-            <p id="file_ele">{file.name}</p>
+            <p id="file_ele">{file.visibleName}</p>
             <p id="file_ele">
-              Synced {Math.floor((Date.now() - file.last_synced) / (1000 * 60 * 60 * 24))} days ago
+              Synced{' '}
+              {Math.floor(
+                (Date.now() - Number.parseInt(file.lastModified)) / (1000 * 60 * 60 * 24)
+              )}{' '}
+              days ago
             </p>
           </div>
         </div>
@@ -34,17 +39,9 @@ export function FileElements(props: FileElementsProps): JSX.Element {
 }
 
 export interface FileElementsProps {
-  files: {
-    name: string
-    type: string
-    last_synced: number
-    file_hash: string
-  }[]
+  files: remarkable_file_node[]
   file_selected_index: number
   set_selected_hash: CallableFunction
   set_file_selected_index: CallableFunction
   set_container_selected_index: CallableFunction
-}
-export interface FileElementState {
-  files: { name: string; type: string; last_synced: number; file_hash: string }[]
 }
