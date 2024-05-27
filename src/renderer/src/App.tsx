@@ -5,6 +5,7 @@ import { DirButtons } from './components/directory_buttons'
 import { FileElements } from './components/file_elements'
 import { SelectedActions } from './components/Selected_actions'
 import { useEffect, useState } from 'react'
+import { Interaction_lock } from './components/interaction_lock'
 
 export interface remarkable_file_node {
   createdTime: string
@@ -21,6 +22,7 @@ export interface remarkable_directory extends remarkable_file_node {
 }
 
 function App(): JSX.Element {
+  /** State variables */
   const [is_side_menu_open, set_side_menu_open] = useState<boolean>(false)
   const [selected_hash, set_selected_hash] = useState<string>('')
   const [file_selected_index, set_file_selected_index] = useState<number>(NaN)
@@ -33,11 +35,17 @@ function App(): JSX.Element {
   const [displayed_directories, set_displayed_directories] = useState<remarkable_directory[]>([])
   const [activate_container, set_activate_container] = useState<string>('')
   const [container_path, set_container_path] = useState<[string, string][]>([['Home', '']])
+  const [interaction_lock, set_interaction_lock] = useState<boolean>(false)
 
   /** Event to close the side menu or de-select anything active */
   window.addEventListener('mousedown', (e) => {
     const id = (e.target as HTMLElement).id
-    if (id !== 'file_ele' && id !== 'dir_btn' && id !== 'main_nav_menu') {
+    if (
+      id !== 'file_ele' &&
+      id !== 'dir_btn' &&
+      id !== 'main_nav_menu' &&
+      id !== 'selected_actions'
+    ) {
       if (is_side_menu_open) {
         set_side_menu_open(false)
       } else {
@@ -98,22 +106,33 @@ function App(): JSX.Element {
 
   /** on mount */
   useEffect(() => {
-    get_download_dirs()
-    update_current_displayed_childen()
+    window.app_api.onFilesReady(() => {
+      get_download_dirs()
+      update_current_displayed_childen()
+    })
     /** Spawn an Alert */
     window.app_api.onAlert((msg) => {
       alert(msg)
     })
+
+    window.app_api.onUnlockInterations(() => {
+      set_interaction_lock(false)
+    })
+
+    window.app_api.request_root_render()
   }, [])
 
   /** =========================== MAIN RENDER =========================== */
   return (
     <>
+      <Interaction_lock locked={interaction_lock} />
+
       <Header
         burger_menu_clicked={() => {
           set_side_menu_open(!is_side_menu_open)
         }}
         previous_address={previous_address}
+        set_interaction_lock={set_interaction_lock}
       />
 
       <Side_menu
@@ -159,7 +178,10 @@ function App(): JSX.Element {
           update_current_displayed_childen={update_current_displayed_childen}
           set_activate_directory={set_activate_container}
         />
-        <SelectedActions hash_selected={selected_hash} />
+        <SelectedActions
+          hash_selected={selected_hash}
+          set_interaction_lock={set_interaction_lock}
+        />
       </div>
 
       <DirButtons

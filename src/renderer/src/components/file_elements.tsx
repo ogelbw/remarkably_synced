@@ -25,7 +25,7 @@ export function FileElements(props: FileElementsProps): JSX.Element {
           <div style={{ display: 'block' }} id="file_ele">
             <p id="file_ele">{file.visibleName}</p>
             <p id="file_ele">
-              Synced{' '}
+              Last Edited {' '}
               {Math.floor(
                 (Date.now() - Number.parseInt(file.lastModified)) / (1000 * 60 * 60 * 24)
               )}{' '}

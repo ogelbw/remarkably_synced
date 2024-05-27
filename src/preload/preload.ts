@@ -84,12 +84,21 @@ export const api = {
     return ipcRenderer.invoke('get-path-to-hash', hash)
   },
 
-  // TODO everything below this line
+  request_root_render: (): void => {
+    ipcRenderer.invoke('request-root-render')
+  },
 
   /** Send all backed up files to the device from this machine. */
   upload_files: (): Promise<boolean> => {
     return ipcRenderer.invoke('upload-files')
   },
+
+  upload_a_file: (file_hash: string): Promise<boolean> => {
+    return ipcRenderer.invoke('upload-a-file', file_hash)
+  },
+
+  // TODO everything below this line
+
   /** Send all backed up files to the device from this machine. */
   upload_templates: (): Promise<boolean> => {
     return ipcRenderer.invoke('upload-templates')
@@ -101,7 +110,13 @@ export const api = {
 
   /** Main to Render */
   onAlert: (callback): void => {
+    ipcRenderer.removeAllListeners('alert')
     ipcRenderer.on('alert', (_event, message) => callback(message))
+  },
+
+  onUnlockInterations: (callback): void => {
+    ipcRenderer.removeAllListeners('unlock-interactions')
+    ipcRenderer.on('unlock-interactions', () => callback())
   }
 }
 

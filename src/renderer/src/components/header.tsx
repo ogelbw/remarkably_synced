@@ -60,7 +60,7 @@ export function Header(props: HeaderProps): JSX.Element {
         />
         <button
           onClick={window.app_api.connect_to_device}
-          style={{ 
+          style={{
             backgroundColor: 'var(--ev-c-background-mute)',
             height: '37px',
             marginLeft: '10px'
@@ -72,15 +72,40 @@ export function Header(props: HeaderProps): JSX.Element {
 
       {/* Download button start */}
       <div>
-        <button>Upload files</button>
         <button
           onClick={() => {
-            // window.app_api.download_files()
-            window.app_api.download_templates()
-            // window.app_api.download_splashscreens()
+            props.set_interaction_lock(true)
+            window.app_api.upload_files()
           }}
         >
-          Download device
+          Restore files
+        </button>
+
+        <button
+          onClick={async () => {
+            props.set_interaction_lock(true)
+            await Promise.all([window.app_api.download_splashscreens()])
+          }}
+        >
+          Download splashscreens
+        </button>
+
+        <button
+          onClick={async () => {
+            props.set_interaction_lock(true)
+            await Promise.all([window.app_api.download_templates()])
+          }}
+        >
+          Download templates
+        </button>
+
+        <button
+          onClick={async () => {
+            props.set_interaction_lock(true)
+            await Promise.all([window.app_api.download_files()])
+          }}
+        >
+          Download notes
         </button>
       </div>
     </div>
@@ -90,4 +115,5 @@ export function Header(props: HeaderProps): JSX.Element {
 export interface HeaderProps {
   burger_menu_clicked: () => void
   previous_address: string
+  set_interaction_lock: CallableFunction
 }

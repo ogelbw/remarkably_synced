@@ -34,6 +34,9 @@ declare global {
       /** Send all backed up files to the device from this machine. */
       upload_files: () => Promise<boolean>
 
+      /** Send a file to the device from this machine. */
+      upload_a_file: (file_hash: string) => Promise<boolean>
+
       /** Send all backed up files to the device from this machine. */
       upload_templates: () => Promise<boolean>
 
@@ -58,6 +61,9 @@ declare global {
       /** Get the in order container nodes to a file */
       get_path_to_hash: (hash: string) => Promise<remarkable_file_node[]>
 
+      /** Request a root render */
+      request_root_render: () => void
+
       /** ================== Main to Render ================== */
       /** Create an alert on the application window. */
       onAlert: (callback: (msg: string) => void) => void
@@ -66,6 +72,7 @@ declare global {
       onDownloadFilesComplete: (callback: () => void) => void
       onDownloadTemplatesComplete: (callback: () => void) => void
       onDownloadSplashscreensComplete: (callback: () => void) => void
+      onUnlockInterations: (callback: () => void) => void
 
       /** Fired when the files locally on the computer have been parsed */
       onFilesReady: (callback: () => void) => void

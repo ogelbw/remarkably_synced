@@ -3,7 +3,7 @@
  */
 import { app } from 'electron'
 import { join, sep } from 'path'
-import { Client } from 'ssh2'
+import { Client, SFTPWrapper } from 'ssh2'
 import * as fs from 'fs'
 
 const RECURSIVE_FILE_BLACKLIST = ['.', '..', '.tree', 'thumbnails', 'cache', 'lost+found']
@@ -230,7 +230,8 @@ export class Remarkable2_files {
  * for interacting with the device.
  */
 export class Remarkable2_device {
-  private client: Client
+  public client: Client
+
   private username: string
   private address: string
   private password: string
@@ -333,6 +334,27 @@ export class Remarkable2_device {
   }
 
   /**
+   * @description Checks if a file exists on the connected tablet.
+   * @param path The path to the file to check.
+   * @returns A promise that resolves with a boolean indicating if the file exists.
+   */
+  public file_exists(path: string): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.exec(
+        `test -f ${path} && echo "good" || echo "bad"`,
+        (data: Buffer) => {
+          console.log('Exists result: ' + data.toString())
+          resolve(data.toString().includes('good'))
+        },
+        (err) => {
+          console.error(`File exists error: ${err}`)
+          reject(err)
+        }
+      )
+    })
+  }
+
+  /**
    * @description Downloads a file from the connected tablet using SCP.
    * @param path The path to the file to download.
    * @param destination The relative path to the directory where the file is saved (in the electron
@@ -372,6 +394,100 @@ export class Remarkable2_device {
     })
   }
 
+  public async upload_file(
+    source_path: string,
+    device_path: string,
+    sftp: SFTPWrapper
+  ): Promise<void> {
+    /** Check if the file exists on the device and if it does delete it */
+    const exists = await this.file_exists(device_path)
+    if (exists) {
+      console.log(`File exists on device. Deleting ${device_path} for upload...`)
+      await new Promise<void>((resolve, reject) => {
+        this.exec(
+          `rm ${device_path}`,
+          () => {
+            resolve()
+          },
+          (err) => {
+            reject(err)
+          }
+        )
+      })
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      console.log(`Uploading ${source_path} to ${device_path} on the device...`)
+      sftp.fastPut(source_path, device_path, (err) => {
+        if (err) {
+          console.error(`Couldn't upload file. ${source_path} to ${device_path}`)
+          reject(err)
+          return
+        }
+        resolve()
+      })
+    })
+  }
+
+  public async upload_remarkable_file(
+    file_hash: string,
+    file_sync_directory: string,
+    sftp: SFTPWrapper
+  ): Promise<boolean> {
+    /** Check if the following file extensions exist with the file hash. All file with the same name
+     * hash need to be uploaded */
+    const extensions = ['.png', '.pdf', '.epub', '.metadata', '.content', '.pagedata', '.local']
+
+    const files_to_upload: string[] = []
+    extensions.forEach((extension) => {
+      const file_path = join(file_sync_directory, file_hash + extension)
+      if (fs.existsSync(file_path)) {
+        files_to_upload.push(file_hash + extension)
+      }
+    })
+
+    // if the .thumbnails directory exists, upload all the files in it
+    const thumbnail_directory = join(file_sync_directory, file_hash + '.thumbnails')
+    if (fs.existsSync(thumbnail_directory)) {
+      fs.readdirSync(thumbnail_directory).forEach((thumbnail) => {
+        files_to_upload.push(`${file_hash}.thumbnails/${thumbnail}`)
+      })
+    }
+
+    // if the directory of just the file hash exists, upload all the files in it
+    const file_directory = join(file_sync_directory, file_hash)
+    if (fs.existsSync(file_directory)) {
+      fs.readdirSync(file_directory).forEach((file) => {
+        files_to_upload.push(`${file_hash}/${file}`)
+      })
+    }
+
+    // upload all the files
+    for (const file of files_to_upload) {
+      const device_path = `/home/root/.local/share/remarkable/xochitl`
+      await this.upload_file(
+        join(file_sync_directory, join(...file.split('/'))),
+        `${device_path}/${file}`,
+        sftp
+      )
+    }
+    return true
+  }
+
+  public async delete_remarkble_file_on_device(file_hash: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.exec(
+        `rm -r /home/root/.local/share/remarkable/xochitl/${file_hash}*`,
+        () => {
+          resolve()
+        },
+        (err) => {
+          reject(err)
+        }
+      )
+    })
+  }
+
   /**
    * recursive_download
    * @description Recursively download all files in a directory from the device.
@@ -387,33 +503,42 @@ export class Remarkable2_device {
     // Get a list of all the directories in the current directory
     const dirs = await this.list_directories_on_device(path)
 
+    if (!path.endsWith('/')) {
+      path = path + '/'
+    }
+
     // dir will eventually be empty
     for (const dir of dirs) {
-      await this.recursive_download(join(path, dir), destination)
+      await this.recursive_download(`${path}${dir}`, destination)
     }
 
     // Download all the files in the current directory
     const files = await this.list_files_on_device(path)
-    this.client.sftp((err, sftp) => {
-      if (err) {
-        console.error("Couldn't get SFTP connection.")
-        return
-      }
-      for (const file of files) {
-        const temp_destination = join(destination, path.split('xochitl')[1], file)
-        const file_path = join(path, file)
-        console.log(`Downloading ${file_path} from device to ${temp_destination} locally...`)
 
-        // make sure the directory exists
-        fs.mkdirSync(temp_destination.split('/').slice(0, -1).join('/'), { recursive: true })
-        sftp.fastGet(file_path, temp_destination, (err) => {
-          if (err) {
-            console.error(`Couldn't download file. ${file_path} to ${temp_destination}`)
-            return
-          }
-        })
-      }
-    })
+    this.client
+      .sftp((err, sftp) => {
+        if (err) {
+          console.error("Couldn't get SFTP connection.")
+          return
+        }
+        for (const file of files) {
+          const temp_destination = join(destination, path.split('xochitl')[1], file)
+          const file_path = `${path}/${file}`
+          console.log(`Downloading ${file_path} from device to ${temp_destination} locally...`)
+
+          // make sure the directory exists
+          fs.mkdirSync(temp_destination.split(sep).slice(0, -1).join(sep), { recursive: true })
+          sftp.fastGet(file_path, temp_destination, (err) => {
+            if (err) {
+              console.error(`Couldn't download file. ${file_path} to ${temp_destination}`)
+              return
+            }
+          })
+        }
+      })
+      .on('close', () => {
+        console.log('SFTP connection closed.')
+      })
   }
 
   /**
