@@ -1,6 +1,18 @@
 import BurgerMenuSVG from '@renderer/assets/burger_menu'
+import { useEffect, useState } from 'react'
 
 export function Header(props: HeaderProps): JSX.Element {
+  const [connectingState, setConnectingState] = useState('Connect')
+
+  useEffect(() => {
+    window.app_api.onDeviceConnected(() => {
+      setConnectingState('Connected')
+    })
+    window.app_api.onDeviceDisconnected(() => {
+      setConnectingState('Connect')
+    })
+  }, [])
+
   return (
     <div
       style={{
@@ -12,7 +24,8 @@ export function Header(props: HeaderProps): JSX.Element {
         padding: '0 0',
         backgroundColor: 'var(--ev-c-background-soft)',
         marginBottom: '20px',
-        position: 'fixed',
+        // position: 'fixed',
+        margin: '0',
         top: '0',
         left: '0'
       }}
@@ -59,14 +72,20 @@ export function Header(props: HeaderProps): JSX.Element {
           placeholder={props.previous_address}
         />
         <button
-          onClick={window.app_api.connect_to_device}
+          onClick={() => {
+            if (connectingState !== 'Connect') {
+              return
+            }
+            setConnectingState('Connecting')
+            window.app_api.connect_to_device()
+          }}
           style={{
             backgroundColor: 'var(--ev-c-background-mute)',
             height: '37px',
             marginLeft: '10px'
           }}
         >
-          Connect
+          {connectingState}
         </button>
       </div>
 
