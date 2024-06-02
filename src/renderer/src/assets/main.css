@@ -248,3 +248,15 @@ input {
 .noneSelected button{
   margin-left: 5px;
 }
+
+.headerBtnContainer::-webkit-scrollbar{
+  display: none;
+}
+.headerBtnContainer{
+  display: flex;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  place-items: center center;
+  padding: 0;
+  max-height: 37px;
+}

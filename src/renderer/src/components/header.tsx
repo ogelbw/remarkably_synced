@@ -71,7 +71,7 @@ export function Header(props: HeaderProps): JSX.Element {
       </div>
 
       {/* Download button start */}
-      <div>
+      <div className='headerBtnContainer'>
         <button
           onClick={() => {
             props.set_interaction_lock(true)
