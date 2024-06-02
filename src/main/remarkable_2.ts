@@ -84,23 +84,11 @@ export class Remarkable2_files {
   files = new Map<string, remarkable_file_node>()
   /** Maps a directory name to a id hash */
   directory_lookup = new Map<string, string>()
-  public splashscreens: {
-    suspended: remarkable_splashscreen | null
-    power_off: remarkable_splashscreen | null
-    rebooting: remarkable_splashscreen | null
-    overheating: remarkable_splashscreen | null
-    battery_empty: remarkable_splashscreen | null
-  }
+  public splashscreens: remarkable_splashscreen[]
 
   constructor(template_directory: string, splashscreen_directory: string, files_directory: string) {
     // setting the inital states
-    this.splashscreens = {
-      suspended: null,
-      power_off: null,
-      rebooting: null,
-      overheating: null,
-      battery_empty: null
-    }
+    this.splashscreens = []
     this.files.set('', {
       createdTime: '',
       lastModified: '',
@@ -141,26 +129,18 @@ export class Remarkable2_files {
   }
 
   parse_splashscreens(splashscreen_directory: string): void {
-    this.splashscreens.suspended = new remarkable_splashscreen(
-      join(splashscreen_directory, 'suspended.png'),
-      'suspended'
-    )
-    this.splashscreens.power_off = new remarkable_splashscreen(
-      join(splashscreen_directory, 'poweroff.png'),
-      'power_off'
-    )
-    this.splashscreens.rebooting = new remarkable_splashscreen(
-      join(splashscreen_directory, 'rebooting.png'),
-      'rebooting'
-    )
-    this.splashscreens.overheating = new remarkable_splashscreen(
-      join(splashscreen_directory, 'overheating.png'),
-      'overheating'
-    )
-    this.splashscreens.battery_empty = new remarkable_splashscreen(
-      join(splashscreen_directory, 'batteryempty.png'),
-      'battery_low'
-    )
+    // this.splashscreens.suspended = new remarkable_splashscreen(
+    //   join(splashscreen_directory, 'suspended.png'),
+    //   'suspended'
+    // )
+    /** get all of the .png in the splashscreen directory */
+    fs.readdirSync(splashscreen_directory).forEach((file) => {
+      if (file.endsWith('.png')) {
+        this.splashscreens.push(
+          new remarkable_splashscreen(join(splashscreen_directory, file), file.split('.')[0])
+        )
+      }
+    })
   }
 
   parse_files(files_directory: string): void {
@@ -231,6 +211,7 @@ export class Remarkable2_files {
  */
 export class Remarkable2_device {
   public client: Client
+  public connected: boolean = false
 
   private username: string
   private address: string
@@ -253,9 +234,11 @@ export class Remarkable2_device {
       .on('ready', () => {
         console.log('Client :: ready')
         connection_connected_callback()
+        this.connected = true
       })
       .on('error', (err) => {
         console.log('Client :: end')
+        this.connected = false
         this.client.end()
         connection_failed_callback(err)
       })
@@ -269,6 +252,7 @@ export class Remarkable2_device {
       })
       .on('close', () => {
         console.log('Client :: close')
+        this.connected = false
         this.client.end()
         connection_end_callback()
       })

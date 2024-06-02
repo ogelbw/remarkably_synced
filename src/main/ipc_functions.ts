@@ -5,7 +5,8 @@ import {
   Remarkable2_device,
   Remarkable2_files,
   remarkable_directory,
-  remarkable_file_node
+  remarkable_file_node,
+  remarkable_splashscreen
 } from './remarkable_2'
 import { SFTPWrapper } from 'ssh2'
 const prompt = require('electron-prompt')
@@ -63,6 +64,23 @@ export function set_sync_directory(
     fs.writeFileSync(join(app.getPath('userData'), 'syncing_config.json'), JSON.stringify(config))
     return true
   })
+}
+
+/** Let the user select a filepath */
+export function image_selection_dialog(): Promise<string> {
+  return dialog
+    .showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['png'] }]
+    })
+    .then((result) => {
+      // check if the user selected a directory
+      if (result.canceled) {
+        return ''
+      }
+
+      return result.filePaths[0]
+    })
 }
 
 /** Reads the config file in the userdata directory and returns the path for the directory.
@@ -215,6 +233,79 @@ export function register_ipcMain_handlers(
       return get_config_field('splashscreen')
     }
     return get_splashscreen_sync_path()
+  })
+
+  ipcMain.handle('get-local-splashscreens-names', async () => {
+    const splashscreens = get_local_files().splashscreens
+    return splashscreens.map((screen) => screen.id)
+  })
+
+  let last_splashscreen_used = ''
+  let last_splashscreen_data = ''
+  ipcMain.handle('get-local-splashscreen-data', async (_, name: string) => {
+    if (last_splashscreen_used === name) {
+      return last_splashscreen_data
+    } else {
+      const local_files = get_local_files()
+      const image_path = (
+        local_files.splashscreens.find((screen) => screen.id === name) as remarkable_splashscreen
+      ).image_path
+
+      console.log(`image path: ${image_path}`)
+
+      if (image_path === '') {
+        return ''
+      }
+
+      /** Since this function is called multiple times when updating the dom it makes sense to
+       * use a cache to prevent reading the file multiple times.
+       */
+      last_splashscreen_used = name
+      last_splashscreen_data = fs.readFileSync(image_path).toString('base64')
+
+      /* Read the image file and return it as a base64 string */
+      return last_splashscreen_data
+    }
+  })
+
+  ipcMain.handle('select-replacement-splashscreen', async (_, screen: string) => {
+    let path = await image_selection_dialog()
+    if (path !== '') {
+      /** splash screens are either 1404x1872 or 1872x1404, get the aspect ration of the new image
+       * based on it rescize the image to fit the screen.
+       */
+      const dimensions = require('image-size')(path)
+      let scale = 0
+      if (dimensions.width > dimensions.height) {
+        /** This is a landscape image */
+        const x_scale = 1872 / dimensions.width
+        const y_scale = 1404 / dimensions.height
+        scale = Math.min(x_scale, y_scale)
+      } else {
+        /** This is a portrait image */
+        const x_scale = 1404 / dimensions.width
+        const y_scale = 1872 / dimensions.height
+        scale = Math.min(x_scale, y_scale)
+      }
+      console.log(`scale: ${scale}`)
+
+      /** read the selected path, rescale, and write to the splashscreens */
+      const sharp = require('sharp')
+      sharp(path)
+        .resize({
+          width: Math.round(dimensions.width * scale),
+          height: Math.round(dimensions.height * scale)
+        })
+        .toFile(join(get_splashscreen_sync_path(), `${screen}.png`))
+        .catch((err: Error) => {
+          console.error(err)
+        })
+
+      /** Read the file and convert to base64 */
+      path = fs.readFileSync(path).toString('base64')
+      last_splashscreen_data = path
+    }
+    return path
   })
 
   ipcMain.handle('set-device-password', async () => {
@@ -394,5 +485,62 @@ export function register_ipcMain_handlers(
           mainWindow.webContents.send('unlock-interactions')
         })
     })
+  })
+
+  ipcMain.handle('upload-splashscreens', async () => {
+    const splashscreen_sync_path = get_splashscreen_sync_path()
+    if (splashscreen_sync_path === '') {
+      mainWindow.webContents.send(
+        'alert',
+        'No splashscreen sync path set, Please set this in the menu'
+      )
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const device = get_device()
+    if (device === undefined) {
+      mainWindow.webContents.send('alert', 'No device connected')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const local_files = get_local_files()
+    if (local_files === undefined) {
+      mainWindow.webContents.send('alert', 'No local files found')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const splashscreens = local_files.splashscreens
+
+    if (device.connected === false) {
+      mainWindow.webContents.send('alert', 'No device connected')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    device.client
+      .sftp(async (err: Error | undefined, sftp: SFTPWrapper) => {
+        if (err) {
+          mainWindow.webContents.send('alert', 'Failed to start sftp session')
+          mainWindow.webContents.send('unlock-interactions')
+          sftp.end()
+          return
+        }
+        for (const screen of splashscreens) {
+          await device.upload_file(
+            screen.image_path,
+            `/usr/share/remarkable/${screen.id}.png`,
+            sftp
+          )
+        }
+        mainWindow.webContents.send('alert', 'Splashscreens uploaded')
+        mainWindow.webContents.send('unlock-interactions')
+        sftp.end()
+      })
+      .on('close', () => {
+        console.log('sftp session closed')
+      })
   })
 }

@@ -64,6 +64,16 @@ declare global {
       /** Request a root render */
       request_root_render: () => void
 
+      /** Get all the local splashscreens */
+      get_local_splashscreens: () => Promise<string[]>
+
+      /** Get a specific local splashscreen */
+      get_local_splashscreen_data: (name: string) => Promise<string>
+
+      /** Let the user select a splashscreen and return the image data, or and empty string if
+       * there was an error*/
+      select_replacement_splashscreen: (screen: string) => Promise<string>
+
       /** ================== Main to Render ================== */
       /** Create an alert on the application window. */
       onAlert: (callback: (msg: string) => void) => void
