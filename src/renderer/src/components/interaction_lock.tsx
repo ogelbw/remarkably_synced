@@ -2,7 +2,7 @@ export function Interaction_lock(props: InteractionLockProps): JSX.Element {
   return (
     <div
       style={{
-        position: 'sticky',
+        position: 'fixed',
         display: props.locked ? 'block' : 'none',
         width: '100vw',
         height: '100vh',
