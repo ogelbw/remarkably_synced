@@ -160,6 +160,22 @@ function App(): JSX.Element {
       <Side_menu
         list_items={[
           {
+            title: 'Local File Explorer',
+            sub_text: '',
+            action: (): void => {
+              set_current_screen('FileExplorer')
+            }
+          },
+
+          {
+            title: 'Splashscreen Manager',
+            sub_text: '',
+            action: (): void => {
+              set_current_screen('SplashscreenManager')
+            }
+          },
+
+          {
             title: 'Set file directory',
             sub_text: file_download_dir,
             action: (): void => {
@@ -188,14 +204,6 @@ function App(): JSX.Element {
             sub_text: '',
             action: (): void => {
               window.app_api.set_device_password()
-            }
-          },
-
-          {
-            title: 'Splashscreen Manager',
-            sub_text: '',
-            action: (): void => {
-              set_current_screen('SplashscreenManager')
             }
           }
         ]}
