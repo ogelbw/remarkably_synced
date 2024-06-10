@@ -51,7 +51,14 @@ export function Splashscreen_manager(props: {
             >
               Replace
             </button>
-            <button> Upload to device </button>
+            <button
+              onClick={() => {
+                props.set_interaction_lock(true)
+                window.app_api.upload_splashscreen(selectedSplashscreen)
+              }}
+            >
+              Upload to device{' '}
+            </button>
             <button
               onClick={() => {
                 props.set_interaction_lock(true)

@@ -43,6 +43,9 @@ declare global {
       /** Send all backed up splashscreen to the device from this machine. */
       upload_splashscreens: () => Promise<boolean>
 
+      /** Send a splashscreen to the device from this machine. */
+      upload_splashscreen: (name: string) => Promise<boolean>
+
       /** Set the device root password */
       set_device_password: () => Promise<boolean>
 

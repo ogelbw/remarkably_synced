@@ -110,6 +110,11 @@ export const api = {
     return ipcRenderer.invoke('upload-splashscreens')
   },
 
+  /** Send a splashscreen to the device from this machine. */
+  upload_splashscreen: (name: string): Promise<boolean> => {
+    return ipcRenderer.invoke('upload-single-splashscreen', name)
+  },
+
   get_local_splashscreen_data: (name: string): Promise<string> => {
     return ipcRenderer.invoke('get-local-splashscreen-data', name)
   },

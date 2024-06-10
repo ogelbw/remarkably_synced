@@ -487,6 +487,64 @@ export function register_ipcMain_handlers(
     })
   })
 
+  ipcMain.handle('upload-single-splashscreen', async (_, splashscreen_name: string) => {
+    const splashscreen_sync_path = get_splashscreen_sync_path()
+    if (splashscreen_sync_path === '') {
+      mainWindow.webContents.send(
+        'alert',
+        'No splashscreen sync path set, Please set this in the menu'
+      )
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const device = get_device()
+    if (device === undefined) {
+      mainWindow.webContents.send('alert', 'No device connected')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const local_files = get_local_files()
+    if (local_files === undefined) {
+      mainWindow.webContents.send('alert', 'No local files found')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const splashscreens = local_files.splashscreens
+
+    if (device.connected === false) {
+      mainWindow.webContents.send('alert', 'No device connected')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    device.client
+      .sftp(async (err: Error | undefined, sftp: SFTPWrapper) => {
+        if (err) {
+          mainWindow.webContents.send('alert', 'Failed to start sftp session')
+          mainWindow.webContents.send('unlock-interactions')
+          sftp.end()
+          return
+        }
+        const screen = splashscreens.find((screen) => screen.id === splashscreen_name)
+        if (screen === undefined) {
+          mainWindow.webContents.send('alert', 'Splashscreen not found')
+          mainWindow.webContents.send('unlock-interactions')
+          sftp.end()
+          return
+        }
+        await device.upload_file(screen.image_path, `/usr/share/remarkable/${screen.id}.png`, sftp)
+        mainWindow.webContents.send('alert', 'Splashscreen uploaded')
+        mainWindow.webContents.send('unlock-interactions')
+        sftp.end()
+      })
+      .on('close', () => {
+        console.log('sftp session closed')
+      })
+  })
+
   ipcMain.handle('upload-splashscreens', async () => {
     const splashscreen_sync_path = get_splashscreen_sync_path()
     if (splashscreen_sync_path === '') {
