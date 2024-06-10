@@ -1,11 +1,9 @@
 import { Side_menu } from './components/side_bar'
 import { Header } from './components/header'
-import { FilePath } from './components/file_path'
-import { DirButtons } from './components/directory_buttons'
-import { FileElements } from './components/file_elements'
-import { SelectedActions } from './components/Selected_actions'
 import { useEffect, useState } from 'react'
 import { Interaction_lock } from './components/interaction_lock'
+import { FileExplorer } from './File_explorer'
+import { Splashscreen_manager } from './Splashscreen_manager'
 
 export interface remarkable_file_node {
   createdTime: string
@@ -36,6 +34,30 @@ function App(): JSX.Element {
   const [activate_container, set_activate_container] = useState<string>('')
   const [container_path, set_container_path] = useState<[string, string][]>([['Home', '']])
   const [interaction_lock, set_interaction_lock] = useState<boolean>(false)
+
+  /** The current content being displayed */
+  const [current_screen, set_current_screen] = useState<string>('FileExplorer')
+  const screen_content = {
+    FileExplorer: (
+      <FileExplorer
+        selected_hash={selected_hash}
+        set_selected_hash={set_selected_hash}
+        file_selected_index={file_selected_index}
+        set_file_selected_index={set_file_selected_index}
+        container_selected_index={container_selected_index}
+        set_container_selected_index={set_container_selected_index}
+        displayed_files={displayed_files}
+        displayed_directories={displayed_directories}
+        activate_container={activate_container}
+        set_activate_container={set_activate_container}
+        container_path={container_path}
+        set_container_path={set_container_path}
+        update_current_displayed_childen={update_current_displayed_childen}
+        set_interaction_lock={set_interaction_lock}
+      />
+    ),
+    SplashscreenManager: <Splashscreen_manager set_interaction_lock={set_interaction_lock} />
+  }
 
   /** Event to close the side menu or de-select anything active */
   window.addEventListener('mousedown', (e) => {
@@ -138,6 +160,22 @@ function App(): JSX.Element {
       <Side_menu
         list_items={[
           {
+            title: 'Local File Explorer',
+            sub_text: '',
+            action: (): void => {
+              set_current_screen('FileExplorer')
+            }
+          },
+
+          {
+            title: 'Splashscreen Manager',
+            sub_text: '',
+            action: (): void => {
+              set_current_screen('SplashscreenManager')
+            }
+          },
+
+          {
             title: 'Set file directory',
             sub_text: file_download_dir,
             action: (): void => {
@@ -172,35 +210,7 @@ function App(): JSX.Element {
         open={is_side_menu_open}
       />
 
-      <div className="PathActions">
-        <FilePath
-          file_path={container_path}
-          update_current_displayed_childen={update_current_displayed_childen}
-          set_activate_directory={set_activate_container}
-        />
-        <SelectedActions
-          hash_selected={selected_hash}
-          set_interaction_lock={set_interaction_lock}
-        />
-      </div>
-
-      <DirButtons
-        dirs={displayed_directories}
-        set_selected_hash={set_selected_hash}
-        set_file_selected_index={set_file_selected_index}
-        set_container_selected_index={set_container_selected_index}
-        container_selected_index={container_selected_index}
-        set_activate_directory={set_activate_container}
-        update_current_displayed_childen={update_current_displayed_childen}
-      />
-
-      <FileElements
-        files={displayed_files}
-        file_selected_index={file_selected_index}
-        set_selected_hash={set_selected_hash}
-        set_file_selected_index={set_file_selected_index}
-        set_container_selected_index={set_container_selected_index}
-      />
+      {screen_content[current_screen]}
     </>
   )
 }

@@ -97,7 +97,9 @@ export const api = {
     return ipcRenderer.invoke('upload-a-file', file_hash)
   },
 
-  // TODO everything below this line
+  get_local_splashscreens: (): Promise<string[]> => {
+    return ipcRenderer.invoke('get-local-splashscreens-names')
+  },
 
   /** Send all backed up files to the device from this machine. */
   upload_templates: (): Promise<boolean> => {
@@ -106,6 +108,19 @@ export const api = {
   /** Send all backed up splashscreen to the device from this machine. */
   upload_splashscreens: (): Promise<boolean> => {
     return ipcRenderer.invoke('upload-splashscreens')
+  },
+
+  /** Send a splashscreen to the device from this machine. */
+  upload_splashscreen: (name: string): Promise<boolean> => {
+    return ipcRenderer.invoke('upload-single-splashscreen', name)
+  },
+
+  get_local_splashscreen_data: (name: string): Promise<string> => {
+    return ipcRenderer.invoke('get-local-splashscreen-data', name)
+  },
+
+  select_replacement_splashscreen: (screen: string): Promise<string> => {
+    return ipcRenderer.invoke('select-replacement-splashscreen', screen)
   },
 
   /** Main to Render */

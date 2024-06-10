@@ -43,6 +43,9 @@ declare global {
       /** Send all backed up splashscreen to the device from this machine. */
       upload_splashscreens: () => Promise<boolean>
 
+      /** Send a splashscreen to the device from this machine. */
+      upload_splashscreen: (name: string) => Promise<boolean>
+
       /** Set the device root password */
       set_device_password: () => Promise<boolean>
 
@@ -63,6 +66,16 @@ declare global {
 
       /** Request a root render */
       request_root_render: () => void
+
+      /** Get all the local splashscreens */
+      get_local_splashscreens: () => Promise<string[]>
+
+      /** Get a specific local splashscreen */
+      get_local_splashscreen_data: (name: string) => Promise<string>
+
+      /** Let the user select a splashscreen and return the image data, or and empty string if
+       * there was an error*/
+      select_replacement_splashscreen: (screen: string) => Promise<string>
 
       /** ================== Main to Render ================== */
       /** Create an alert on the application window. */
