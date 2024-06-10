@@ -90,7 +90,7 @@ export function Header(props: HeaderProps): JSX.Element {
       </div>
 
       {/* Download button start */}
-      <div>
+      <div style={{ maxHeight: '50px', overflowX: 'hidden', display: 'flex' }}>
         <button
           onClick={() => {
             props.set_interaction_lock(true)
