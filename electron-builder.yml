@@ -1,4 +1,4 @@
-appId: com.electron.app
+appId: com.remarkablySynced.app
 productName: remarkably-synced
 directories:
   buildResources: build
@@ -33,6 +33,7 @@ linux:
     - AppImage
     - snap
     - deb
+    - pacman
   maintainer: electronjs.org
   category: Utility
 appImage:
