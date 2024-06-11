@@ -6,7 +6,8 @@ import {
   Remarkable2_files,
   remarkable_directory,
   remarkable_file_node,
-  remarkable_splashscreen
+  remarkable_splashscreen,
+  remarkable_template_data
 } from './remarkable_2'
 import { SFTPWrapper } from 'ssh2'
 const prompt = require('electron-prompt')
@@ -600,5 +601,155 @@ export function register_ipcMain_handlers(
       .on('close', () => {
         console.log('sftp session closed')
       })
+  })
+
+  ipcMain.handle('upload-templates', async () => {
+    const template_sync_path = get_template_sync_path()
+    if (template_sync_path === '') {
+      mainWindow.webContents.send('alert', 'No template sync path set, Please set this in the menu')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const device = get_device()
+    if (device === undefined) {
+      mainWindow.webContents.send('alert', 'No device connected')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const local_files = get_local_files()
+    if (local_files === undefined) {
+      mainWindow.webContents.send('alert', 'No local files found')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    const templates = local_files.templates
+
+    if (device.connected === false) {
+      mainWindow.webContents.send('alert', 'No device connected')
+      mainWindow.webContents.send('unlock-interactions')
+      return
+    }
+
+    device.client
+      .sftp(async (err: Error | undefined, sftp: SFTPWrapper) => {
+        if (err) {
+          mainWindow.webContents.send('alert', 'Failed to start sftp session')
+          mainWindow.webContents.send('unlock-interactions')
+          sftp.end()
+          return
+        }
+        for (const template of templates) {
+          await device.upload_file(
+            join(get_template_sync_path(), `${template.filename}.png`),
+            `/usr/share/remarkable/templates/${template.filename}.png`,
+            sftp
+          )
+        }
+        await device.upload_file(
+          join(get_template_sync_path(), `templates.json`),
+          `/usr/share/remarkable/templates/templates.json`,
+          sftp
+        )
+        mainWindow.webContents.send('alert', 'Templates uploaded')
+        mainWindow.webContents.send('unlock-interactions')
+        sftp.end()
+      })
+      .on('close', () => {
+        console.log('sftp session closed')
+      })
+  })
+
+  ipcMain.handle('get-local-templates', async () => {
+    const templates = get_local_files().templates
+    return templates.map((template) => template.filename)
+  })
+
+  ipcMain.handle('get-local-template-image', async (_, name: string) => {
+    const template = get_local_files().templates.find((template) => template.filename === name)
+    if (template === undefined) {
+      return ''
+    }
+    return fs.readFileSync(join(get_template_sync_path(), `${name}.png`)).toString('base64')
+  })
+
+  // Copy the file into the templates directory and update the templates.json file
+  ipcMain.handle('add-template', async (_, template: remarkable_template_data) => {
+    if (template.name === '') {
+      mainWindow.webContents.send('alert', 'No template name set')
+      mainWindow.webContents.send('unlock-interactions')
+      return false
+    }
+
+    const template_sync_path = get_template_sync_path()
+    if (template_sync_path === '') {
+      mainWindow.webContents.send('alert', 'No template sync path set, Please set this in the menu')
+      mainWindow.webContents.send('unlock-interactions')
+      return false
+    }
+
+    const local_files = get_local_files()
+    if (local_files === undefined) {
+      mainWindow.webContents.send('alert', 'No local files found')
+      mainWindow.webContents.send('unlock-interactions')
+      return false
+    }
+
+    const file_path = await image_selection_dialog()
+
+    if (file_path === '') {
+      mainWindow.webContents.send('alert', 'No file selected')
+      mainWindow.webContents.send('unlock-interactions')
+      return false
+    }
+
+    // Copy the file to the templates directory
+    fs.copyFileSync(file_path, join(template_sync_path, `${template.filename}.png`))
+
+    get_local_files().templates.push(template)
+    fs.writeFileSync(
+      join(template_sync_path, 'templates.json'),
+      JSON.stringify({ templates: get_local_files().templates }, null, 2).replace(/\\\\/g, '\\')
+    )
+
+    mainWindow.webContents.send('alert', 'Template added')
+    mainWindow.webContents.send('unlock-interactions')
+    return true
+  })
+
+  /** Open a dialog to select an image from the local machine.
+   * @returns the base64 encoded image data and the path.
+   */
+  ipcMain.handle('template-image-dialog', async () => {
+    const path = await image_selection_dialog()
+    if (path === '') {
+      return ['', '']
+    }
+    const data = fs.readFileSync(path).toString('base64')
+    return [data, path]
+  })
+
+  ipcMain.handle('get-template-icon-codes', async () => {
+    const templates = get_local_files().templates
+    // create a set to store the unique icon codes
+    const icon_codes = new Set<string>()
+    templates.forEach((template) => {
+      icon_codes.add(template.iconCode)
+    })
+    return Array.from(icon_codes)
+  })
+
+  ipcMain.handle('get-template-categories', async () => {
+    const templates = get_local_files().templates
+    // create a set to store the unique categories
+    const categories = new Set<string>()
+    templates.forEach((template) => {
+      template.categories.forEach((category) => {
+        categories.add(category)
+      })
+    })
+    return Array.from(categories)
   })
 }

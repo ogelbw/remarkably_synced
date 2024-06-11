@@ -260,3 +260,17 @@ input {
   padding: 0;
   max-height: 37px;
 }
+
+.ManagerContainer{
+  width: 100vw;
+  height: 100%;
+  display: flex;
+  place-items: center center;
+  margin-left: auto;
+  margin-right: auto;
+
+}
+.ManagerContainer>div{
+  margin-left: auto;
+  margin-right: auto;
+}

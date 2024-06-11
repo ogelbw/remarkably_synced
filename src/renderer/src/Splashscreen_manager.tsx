@@ -22,7 +22,7 @@ export function Splashscreen_manager(props: {
   }, [])
 
   return (
-    <div className="SSManagerContainer">
+    <div className="ManagerContainer">
       <div className="splashscreenControls">
         <div>
           Splashscreen:{' '}

@@ -1,4 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import { remarkable_file_node, remarkable_template_data } from '../main/remarkable_2'
 
 declare global {
   interface Window {
@@ -72,6 +73,24 @@ declare global {
 
       /** Get a specific local splashscreen */
       get_local_splashscreen_data: (name: string) => Promise<string>
+
+      /** Get all the local templates */
+      get_local_templates: () => Promise<string[]>
+
+      /** Get a specific local template */
+      get_local_template_image: (name: string) => Promise<string>
+
+      /** Select template image from local*/
+      select_template_image: () => Promise<[string, string]>
+
+      /** Add a template to the local templates */
+      add_template: (template: remarkable_template_data) => Promise<boolean>
+
+      /** Get all the local template icon codes */
+      get_template_icon_codes: () => Promise<string[]>
+
+      /** Get all the local template categories */
+      get_template_categories: () => Promise<string[]>
 
       /** Let the user select a splashscreen and return the image data, or and empty string if
        * there was an error*/

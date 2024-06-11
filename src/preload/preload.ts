@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 // import { remarkable_file_node, remarkable_directory, remarkable_template } from '../main/remarkable_2'
-import { remarkable_file_node } from '../main/remarkable_2'
+import { remarkable_file_node, remarkable_template_data } from '../main/remarkable_2'
 
 // Custom APIs for renderer
 export const api = {
@@ -121,6 +121,35 @@ export const api = {
 
   select_replacement_splashscreen: (screen: string): Promise<string> => {
     return ipcRenderer.invoke('select-replacement-splashscreen', screen)
+  },
+
+  /** Get all the local templates */
+  get_local_templates: (): Promise<string[]> => {
+    return ipcRenderer.invoke('get-local-templates')
+  },
+
+  /** Get a specific local template */
+  get_local_template_image: (name: string): Promise<string> => {
+    return ipcRenderer.invoke('get-local-template-image', name)
+  },
+
+  select_template_image: (): Promise<[string, string]> => {
+    return ipcRenderer.invoke('template-image-dialog')
+  },
+
+  /** Add a template to the local templates */
+  add_template: (image_path: string, template: remarkable_template_data): Promise<boolean> => {
+    return ipcRenderer.invoke('add-template', image_path, template)
+  },
+
+  /** Get all the local template icon codes */
+  get_template_icon_codes: (): Promise<string[]> => {
+    return ipcRenderer.invoke('get-template-icon-codes')
+  },
+
+  /** Get all the local template categories */
+  get_template_categories: (): Promise<string[]> => {
+    return ipcRenderer.invoke('get-template-categories')
   },
 
   /** Main to Render */

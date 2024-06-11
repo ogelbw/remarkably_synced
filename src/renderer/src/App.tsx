@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Interaction_lock } from './components/interaction_lock'
 import { FileExplorer } from './File_explorer'
 import { Splashscreen_manager } from './Splashscreen_manager'
+import { TemplateManager } from './Template_manager'
 
 export interface remarkable_file_node {
   createdTime: string
@@ -56,7 +57,8 @@ function App(): JSX.Element {
         set_interaction_lock={set_interaction_lock}
       />
     ),
-    SplashscreenManager: <Splashscreen_manager set_interaction_lock={set_interaction_lock} />
+    SplashscreenManager: <Splashscreen_manager set_interaction_lock={set_interaction_lock} />,
+    TemplateManager: <TemplateManager set_interaction_lock={set_interaction_lock} />
   }
 
   /** Event to close the side menu or de-select anything active */
@@ -172,6 +174,14 @@ function App(): JSX.Element {
             sub_text: '',
             action: (): void => {
               set_current_screen('SplashscreenManager')
+            }
+          },
+
+          {
+            title: 'Template Manager',
+            sub_text: '',
+            action: (): void => {
+              set_current_screen('TemplateManager')
             }
           },
 

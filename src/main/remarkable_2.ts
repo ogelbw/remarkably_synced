@@ -17,22 +17,12 @@ const RECURSIVE_FILE_BLACKLIST = ['.', '..', '.tree', 'thumbnails', 'cache', 'lo
 // /home/root/.cache/remarkable/xochitl/device_id (nice find)
 // /home/root/.config/remarkable/xochitl.conf (device config)
 
-interface remarkable_template_data {
+export interface remarkable_template_data {
   name: string
   filename: string
   iconCode: string
+  landscape: boolean
   categories: string[]
-}
-
-/**
- * @description Represents a reMarkable 2 template, which is a image.
- */
-export interface remarkable_template {
-  name: string
-  filename: string
-  icon_code: string
-  categories: string[]
-  holding_directory: string
 }
 
 /**
@@ -80,7 +70,7 @@ export interface remarkable_directory extends remarkable_file_node {
  * through this class and then uploaded to the device using the provided methods.
  */
 export class Remarkable2_files {
-  public templates: remarkable_template[] = []
+  public templates: remarkable_template_data[] = []
   files = new Map<string, remarkable_file_node>()
   /** Maps a directory name to a id hash */
   directory_lookup = new Map<string, string>()
@@ -114,17 +104,20 @@ export class Remarkable2_files {
     // read the templates.json file
     const templates_data: {
       templates: remarkable_template_data[]
-    } = JSON.parse(fs.readFileSync(join(templates_directory, 'templates.json')).toString())
+    } = JSON.parse(
+      fs.readFileSync(join(templates_directory, 'templates.json')).toString().replace(/\\/g, '\\\\')
+    )
 
     // create a new template object for each template in the json file
     templates_data.templates.forEach((template_data) => {
       this.templates.push({
         name: template_data.name,
         filename: template_data.filename,
-        icon_code: template_data.iconCode,
+        iconCode: template_data.iconCode,
         categories: template_data.categories,
-        holding_directory: templates_directory
+        landscape: template_data.landscape ? true : false
       })
+      console.log(template_data.iconCode)
     })
   }
 
@@ -325,7 +318,7 @@ export class Remarkable2_device {
   public file_exists(path: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.exec(
-        `test -f ${path} && echo "good" || echo "bad"`,
+        `test -f "${path}" && echo "good" || echo "bad"`,
         (data: Buffer) => {
           console.log('Exists result: ' + data.toString())
           resolve(data.toString().includes('good'))
@@ -389,7 +382,7 @@ export class Remarkable2_device {
       console.log(`File exists on device. Deleting ${device_path} for upload...`)
       await new Promise<void>((resolve, reject) => {
         this.exec(
-          `rm ${device_path}`,
+          `rm "${device_path}"`,
           () => {
             resolve()
           },
