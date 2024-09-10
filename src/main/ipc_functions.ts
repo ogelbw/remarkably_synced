@@ -124,7 +124,7 @@ export function register_ipcMain_handlers(
   set_device: (d: Remarkable2_device) => void,
   get_device: () => Remarkable2_device,
   get_local_files: () => Remarkable2_files,
-  set_local_files: (f: Remarkable2_files) => void
+  set_local_files: () => void
 ): void {
   // Note this has to be located here since it's calls to the main process. (bad planning I know)
   const downloadFiles = async (syncPath: string, file_type: string): Promise<void> => {
@@ -138,6 +138,7 @@ export function register_ipcMain_handlers(
         get_device()
           .Download_note_files(syncPath)
           .then(() => {
+            // notify the user that the files have been downloaded
             mainWindow.webContents.send('alert', `Downloaded files to ${syncPath}`)
           })
           .catch(() => {
@@ -145,13 +146,7 @@ export function register_ipcMain_handlers(
           })
           .finally(() => {
             mainWindow.webContents.send('unlock-interactions')
-            set_local_files(
-              new Remarkable2_files(
-                get_file_sync_path(),
-                get_template_sync_path(),
-                get_splashscreen_sync_path()
-              )
-            )
+            set_local_files()
           })
         return
       } else if (file_type === 'templates') {
@@ -375,16 +370,16 @@ export function register_ipcMain_handlers(
     return path.reverse()
   })
 
-  ipcMain.handle('download-files', () => {
-    downloadFiles(get_file_sync_path(), 'files')
+  ipcMain.handle('download-files', async () => {
+    return downloadFiles(get_file_sync_path(), 'files')
   })
 
-  ipcMain.handle('download-templates', () => {
-    downloadFiles(get_template_sync_path(), 'templates')
+  ipcMain.handle('download-templates', async () => {
+    return downloadFiles(get_template_sync_path(), 'templates')
   })
 
-  ipcMain.handle('download-splashscreens', () => {
-    downloadFiles(get_splashscreen_sync_path(), 'splashscreens')
+  ipcMain.handle('download-splashscreens', async () => {
+    return downloadFiles(get_splashscreen_sync_path(), 'splashscreens')
   })
 
   ipcMain.handle('get-children-at', (_, hash: string) => {

@@ -35,7 +35,7 @@ export const api = {
   },
 
   /** Download all the files on the device, Returns if it was successful. */
-  download_files: (): Promise<boolean> => {
+  download_files: (): Promise<void> => {
     return ipcRenderer.invoke('download-files')
   },
   onDownloadFilesComplete(callback): void {
@@ -43,7 +43,7 @@ export const api = {
   },
 
   /** Download all the templates on the device, Returns if it was successful.*/
-  download_templates: (): Promise<boolean> => {
+  download_templates: (): Promise<void> => {
     return ipcRenderer.invoke('download-templates')
   },
   onDownloadTemplatesComplete(callback): void {
@@ -51,7 +51,7 @@ export const api = {
   },
 
   /** Download all the splashscreens on the device, Returns if it was successful. */
-  download_splashscreens: (): Promise<boolean> => {
+  download_splashscreens: (): Promise<void> => {
     return ipcRenderer.invoke('download-splashscreens')
   },
   onDownloadSplashscreensComplete(callback): void {

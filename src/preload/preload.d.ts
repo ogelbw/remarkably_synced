@@ -24,13 +24,13 @@ declare global {
       get_splashscreen_download_directory: () => Promise<string>
 
       /** Download all the files on the device */
-      download_files: () => Promise<boolean>
+      download_files: () => Promise<void>
 
       /** Download all the templates on the device */
-      download_templates: () => Promise<boolean>
+      download_templates: () => Promise<void>
 
       /** Download all the splashscreens on the device */
-      download_splashscreens: () => Promise<boolean>
+      download_splashscreens: () => Promise<void>
 
       /** Send all backed up files to the device from this machine. */
       upload_files: () => Promise<boolean>

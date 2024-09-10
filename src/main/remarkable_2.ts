@@ -41,7 +41,7 @@ export class remarkable_splashscreen {
     // read the image at image_path, delete the orignal image and write the new image
     const img = fs.readFileSync(image_path)
     fs.existsSync(this.image_path) && fs.rmSync(this.image_path)
-    fs.writeFileSync(this.image_path, img)
+    fs.writeFileSync(this.image_path, new Uint8Array(img))
   }
 }
 
@@ -101,6 +101,8 @@ export class Remarkable2_files {
   }
 
   parse_templates(templates_directory: string): void {
+    this.templates = []
+
     // read the templates.json file
     const templates_data: {
       templates: remarkable_template_data[]
@@ -117,15 +119,12 @@ export class Remarkable2_files {
         categories: template_data.categories,
         landscape: template_data.landscape ? true : false
       })
-      console.log(template_data.iconCode)
     })
   }
 
   parse_splashscreens(splashscreen_directory: string): void {
-    // this.splashscreens.suspended = new remarkable_splashscreen(
-    //   join(splashscreen_directory, 'suspended.png'),
-    //   'suspended'
-    // )
+    this.splashscreens = []
+
     /** get all of the .png in the splashscreen directory */
     fs.readdirSync(splashscreen_directory).forEach((file) => {
       if (file.endsWith('.png')) {
@@ -137,23 +136,51 @@ export class Remarkable2_files {
   }
 
   parse_files(files_directory: string): void {
+    this.files = new Map<string, remarkable_file_node>()
+    this.files.set('', {
+      createdTime: '',
+      lastModified: '',
+      parent: '',
+      pinned: false,
+      type: 'CollectionType',
+      visibleName: 'root',
+      file_hash: '',
+      children: []
+    } as remarkable_directory)
+    this.directory_lookup = new Map<string, string>()
+
+    /**
+     * We scan the local files directory for any .metadata file. For each hit we get the file
+     * hash from the file name and the file object from the file. We then add the file object to
+     * the files map and add the file to the parent's children. If the parent does not exist we
+     * create a new parent and add the file to the parent's children. We also add the file to the
+     * directory lookup map which maps the visible name of the directory to the file hash.
+     */
     fs.readdirSync(files_directory).forEach((file) => {
       if (!file.endsWith('.metadata')) return
       if (this.files === undefined) throw new Error('Files not initialized')
 
+      // getting the file hash from the file name
       const file_path_split = file.split(sep)
       const file_hash = file_path_split[file_path_split.length - 1].split('.')[0]
+
+      // getting the file object from the json
       const file_object = JSON.parse(
         fs.readFileSync(join(files_directory, file)).toString()
       ) as remarkable_file_node
+
       const file_type: string = file_object.type
       const parent_directory: string = file_object.parent
       file_object.file_hash = file_hash
+
+      // if the parent directory is trash, we don't want to add the file to the files object.
       if (parent_directory === 'trash') return
 
+      // Based on the file type we add the file to the collection of files
       switch (file_type) {
         case 'CollectionType':
-          // if this directory is already known, takes it's children and add them to the new object
+          /** if this directory is already known, takes it's children and add them to the new object
+           *  if it is not known, create a new directory object and add it to the files map */
           if (!this.files.has(file_hash)) {
             ;(file_object as remarkable_directory).children = []
           } else {
@@ -200,7 +227,8 @@ export class Remarkable2_files {
 
 /**
  * @description Represents an SSH connection to a reMarkable 2 device and provides utility methods
- * for interacting with the device.
+ * for interacting with the device.\
+ * This is a wrapper around the ssh2 library.
  */
 export class Remarkable2_device {
   public client: Client
@@ -350,8 +378,8 @@ export class Remarkable2_device {
     return new Promise<void>((resolve, reject) => {
       console.log(`Downloading ${path} from device to ${destination} locally...`)
 
-      // make sure the directory exists
-      fs.mkdirSync(destination.split('/').slice(0, -1).join('/'), { recursive: true })
+      // make sure the destination directory exists
+      fs.mkdirSync(destination.split(sep).slice(0, -1).join(sep), { recursive: true })
 
       this.client.sftp((err, sftp) => {
         if (err) {
@@ -371,6 +399,13 @@ export class Remarkable2_device {
     })
   }
 
+  /**
+   * @description Uploads a file to the connected tablet using SCP.
+   * @param source_path The path to the file to upload.
+   * @param device_path The path to where the file will be saved on the device.
+   * @param sftp The SFTP connection to the device.
+   * @returns A promise that resolves when the file has been uploaded.
+   */
   public async upload_file(
     source_path: string,
     device_path: string,
@@ -406,6 +441,13 @@ export class Remarkable2_device {
     })
   }
 
+  /**
+   * @description Uploads all files associated with a file hash to the connected tablet.
+   * @param file_hash The hash of the file to upload.
+   * @param file_sync_directory The directory where the files are stored on the local computer.
+   * @param sftp The SFTP connection to the device.
+   * @returns A promise that resolves when all files have been uploaded.
+   */
   public async upload_remarkable_file(
     file_hash: string,
     file_sync_directory: string,
@@ -451,6 +493,11 @@ export class Remarkable2_device {
     return true
   }
 
+  /**
+   * @description Deletes a collection of files on the connected tablet.
+   * @param file_hash The hash of the file to delete.
+   * @returns A promise that resolves when all files have been deleted.
+   */
   public async delete_remarkble_file_on_device(file_hash: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       this.exec(
@@ -473,49 +520,55 @@ export class Remarkable2_device {
    * user data directory by default).
    * @returns A promise that resolves when all files have been downloaded.
    */
-  public async recursive_download(
+  public recursive_download(
     path: string,
     destination: string = app.getPath('appData')
   ): Promise<void> {
-    // Get a list of all the directories in the current directory
-    const dirs = await this.list_directories_on_device(path)
+    // eslint-disable-next-line no-async-promise-executor
+    return new Promise<void>(async (resolve, reject) => {
+      // Get a list of all the directories in the current directory
+      const dirs = await this.list_directories_on_device(path)
 
-    if (!path.endsWith('/')) {
-      path = path + '/'
-    }
+      if (!path.endsWith('/')) {
+        path = path + '/'
+      }
 
-    // dir will eventually be empty
-    for (const dir of dirs) {
-      await this.recursive_download(`${path}${dir}`, destination)
-    }
+      // dir will eventually be empty
+      for (const dir of dirs) {
+        await this.recursive_download(`${path}${dir}`, destination)
+      }
 
-    // Download all the files in the current directory
-    const files = await this.list_files_on_device(path)
+      // Download all the files in the current directory
+      const files = await this.list_files_on_device(path)
 
-    this.client
-      .sftp((err, sftp) => {
-        if (err) {
-          console.error("Couldn't get SFTP connection.")
-          return
-        }
-        for (const file of files) {
-          const temp_destination = join(destination, path.split('xochitl')[1], file)
-          const file_path = `${path}/${file}`
-          console.log(`Downloading ${file_path} from device to ${temp_destination} locally...`)
+      this.client
+        .sftp((err, sftp) => {
+          if (err) {
+            console.error("Couldn't get SFTP connection.")
+            reject(err)
+            return
+          }
+          for (const file of files) {
+            const temp_destination = join(destination, path.split('xochitl')[1], file)
+            const file_path = `${path}/${file}`
+            console.log(`Downloading ${file_path} from device to ${temp_destination} locally...`)
 
-          // make sure the directory exists
-          fs.mkdirSync(temp_destination.split(sep).slice(0, -1).join(sep), { recursive: true })
-          sftp.fastGet(file_path, temp_destination, (err) => {
-            if (err) {
-              console.error(`Couldn't download file. ${file_path} to ${temp_destination}`)
-              return
-            }
-          })
-        }
-      })
-      .on('close', () => {
-        console.log('SFTP connection closed.')
-      })
+            // make sure the directory exists
+            fs.mkdirSync(temp_destination.split(sep).slice(0, -1).join(sep), { recursive: true })
+            sftp.fastGet(file_path, temp_destination, (err) => {
+              if (err) {
+                console.error(`Couldn't download file. ${file_path} to ${temp_destination}`)
+                reject(err)
+                return
+              }
+            })
+          }
+          resolve()
+        })
+        .on('close', () => {
+          console.log('SFTP connection closed.')
+        })
+    })
   }
 
   /**

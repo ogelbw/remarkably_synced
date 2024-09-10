@@ -135,8 +135,9 @@ app.whenReady().then(() => {
       },
       () => device,
       () => local_files,
-      (f) => {
-        local_files = f
+      () => {
+        local_files.parse_files(get_config_field('file'))
+        mainWindow.webContents.send('files-ready')
       }
     )
     mainWindow.webContents.send('files-ready')
