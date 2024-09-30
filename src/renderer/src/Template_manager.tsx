@@ -43,7 +43,8 @@ export function TemplateManager(props: { set_interaction_lock: CallableFunction 
             type="text"
             onChange={(e) => {
               setNewTemplateName(e.target.value)
-            }} />
+            }}
+          />
         </div>
         <div>
           Template Preview:{' '}
@@ -77,8 +78,13 @@ export function TemplateManager(props: { set_interaction_lock: CallableFunction 
           >
             {template_categories.map((category) => {
               // eslint-disable-next-line prettier/prettier
-              return <div 
-              style={{ display: 'flex', placeItems: 'center center', justifyContent: 'space-around' }}
+              return (
+                <div
+                  style={{
+                    display: 'flex',
+                    placeItems: 'center center',
+                    justifyContent: 'space-around'
+                  }}
                   key={category}
                 >
                   {' '}
@@ -97,7 +103,8 @@ export function TemplateManager(props: { set_interaction_lock: CallableFunction 
                   {category}
                   <br />
                 </div>
-              })}
+              )
+            })}
           </div>
           <div
             style={{ display: 'flex', placeItems: 'center center', justifyContent: 'space-around' }}

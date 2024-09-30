@@ -1,6 +1,6 @@
 :root {
   --ev-c-white: #ffffff;
-  --ev-c-white-soft: #F3EFE7;
+  --ev-c-white-soft: #f3efe7;
   --ev-c-white-mute: #ede8de;
 
   --ev-c-black: #1b1b1f;
@@ -17,7 +17,7 @@
     --ev-c-button-alt: var(--ev-c-black-soft);
     --ev-c-button-alt-hover: var(--ev-c-black-mute);
   }
-  
+
   @media screen and (prefers-color-scheme: light) {
     --ev-c-background: var(--ev-c-white);
     --ev-c-background-mute: var(--ev-c-white-mute);

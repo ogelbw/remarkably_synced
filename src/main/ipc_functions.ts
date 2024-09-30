@@ -124,7 +124,7 @@ export function register_ipcMain_handlers(
   set_device: (d: Remarkable2_device) => void,
   get_device: () => Remarkable2_device,
   get_local_files: () => Remarkable2_files,
-  set_local_files: () => void
+  reparse_rm_files: () => void,
 ): void {
   // Note this has to be located here since it's calls to the main process. (bad planning I know)
   const downloadFiles = async (syncPath: string, file_type: string): Promise<void> => {
@@ -146,7 +146,7 @@ export function register_ipcMain_handlers(
           })
           .finally(() => {
             mainWindow.webContents.send('unlock-interactions')
-            set_local_files()
+            reparse_rm_files()
           })
         return
       } else if (file_type === 'templates') {
@@ -746,5 +746,34 @@ export function register_ipcMain_handlers(
       })
     })
     return Array.from(categories)
+  })
+
+  ipcMain.handle('move-rm-file', async (_, target: string, container: string) => {
+    // get the rm file for the target and update the parent
+    const local_files = get_local_files()
+    const target_file = local_files.files.get(target) as remarkable_file_node
+    const old_container_hash = target_file.parent
+    target_file.parent = container
+
+    // remove the target from the old container
+    const old_container = local_files.files.get(old_container_hash) as remarkable_directory
+    old_container.children = old_container.children.filter((child) => child.file_hash !== target)
+
+    // now update the container to include the target
+    const container_file = local_files.files.get(container) as remarkable_directory
+    container_file.children.push(target_file)
+
+    // update the files on disk
+    console.log(`moving ${target} to ${container}`)
+    const fileStorePath = get_config_field('file')
+    const metadata = local_files.read_metadata_file(target, fileStorePath)
+    metadata.parent = container
+    local_files.update_file_on_disk(target, metadata, fileStorePath)
+
+    // update the local files
+    local_files.files.set(target, target_file)
+    console.log(`target file: ${Object.values(target_file)}`)
+    local_files.files.set(container, container_file)
+    local_files.files.set(old_container_hash, old_container)
   })
 }

@@ -96,6 +96,9 @@ declare global {
        * there was an error*/
       select_replacement_splashscreen: (screen: string) => Promise<string>
 
+      /** Updates the targets parent to a container */
+      move_rm_file: (target: string, container: string) => Promise<void>
+
       /** ================== Main to Render ================== */
       /** Create an alert on the application window. */
       onAlert: (callback: (msg: string) => void) => void

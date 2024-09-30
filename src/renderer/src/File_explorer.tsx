@@ -17,7 +17,7 @@ export function FileExplorer(props: {
   set_activate_container: (hash: string) => void
   container_path: [string, string][]
   set_container_path: (path: [string, string][]) => void
-  update_current_displayed_childen: (hash: string) => void
+  update_current_displayed_childen: (hash?: string) => void
   set_interaction_lock: (lock: boolean) => void
 }): JSX.Element {
   return (
@@ -31,6 +31,8 @@ export function FileExplorer(props: {
         <SelectedActions
           hash_selected={props.selected_hash}
           set_interaction_lock={props.set_interaction_lock}
+          current_container={props.activate_container}
+          update_current_displayed_childen={props.update_current_displayed_childen}
         />
       </div>
 

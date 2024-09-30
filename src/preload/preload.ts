@@ -152,6 +152,11 @@ export const api = {
     return ipcRenderer.invoke('get-template-categories')
   },
 
+  /** Updates the targets parent to a container */
+  move_rm_file: (target: string, container: string): Promise<void> => {
+    return ipcRenderer.invoke('move-rm-file', target, container)
+  },
+
   /** Main to Render */
   onAlert: (callback): void => {
     ipcRenderer.removeAllListeners('alert')

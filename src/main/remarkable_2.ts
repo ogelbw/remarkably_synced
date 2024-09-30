@@ -25,6 +25,17 @@ export interface remarkable_template_data {
   categories: string[]
 }
 
+export interface remarkable_file_metadata {
+  createdTime: string
+  lastModified: string
+  lastOpened: string
+  lastOpenedPage: number
+  parent: string
+  pinned: boolean
+  type: string
+  visibleName: string
+}
+
 /**
  * @description Represents a reMarkable 2 splashscreen, which is a image.
  */
@@ -223,8 +234,25 @@ export class Remarkable2_files {
       }
     })
   }
-}
 
+  read_metadata_file(file_hash: string, file_store_path: string): remarkable_file_metadata {
+    return JSON.parse(
+      fs.readFileSync(join(file_store_path, `${file_hash}.metadata`)).toString()
+    ) as remarkable_file_metadata
+  }
+
+  update_file_on_disk(
+    file_hash: string,
+    file_data: remarkable_file_metadata | null,
+    file_store_path: string
+  ): void {
+    // overwrite the metadata file
+    fs.writeFileSync(
+      join(file_store_path, `${file_hash}.metadata`),
+      JSON.stringify(file_data, null, 4)
+    )
+  }
+}
 /**
  * @description Represents an SSH connection to a reMarkable 2 device and provides utility methods
  * for interacting with the device.\

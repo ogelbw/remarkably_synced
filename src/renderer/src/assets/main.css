@@ -1,6 +1,6 @@
 @import './base.css';
 
-*{
+* {
   transition: background-color 0.3s ease 0s;
 }
 
@@ -28,16 +28,16 @@ body {
   margin: 0;
 }
 
-::-webkit-scrollbar{
+::-webkit-scrollbar {
   height: 10px;
   width: 10px;
   cursor: pointer;
 }
-::-webkit-scrollbar-thumb:horizontal{
+::-webkit-scrollbar-thumb:horizontal {
   background: var(--ev-c-background-soft);
   border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:horizontal:hover{
+::-webkit-scrollbar-thumb:horizontal:hover {
   background: var(--ev-c-background-mute);
 }
 
@@ -53,7 +53,13 @@ button {
 }
 
 button:hover {
-  background-color:  var(--ev-c-button-alt-hover);
+  background-color: var(--ev-c-button-alt-hover);
+}
+
+button:disabled {
+  background-color: var(--ev-c-button-alt);
+  color: var(--ev-c-text-subtext);
+  cursor: not-allowed;
 }
 
 code {
@@ -111,7 +117,7 @@ input {
   height: 37px;
 }
 
-.Main_nav_item{
+.Main_nav_item {
   font-size: 20px;
   padding: 20px;
   margin-top: 20px;
@@ -125,7 +131,7 @@ input {
   color: var(--ev-c-text-subtext);
   font-size: 10px;
 }
-.Main_nav_item:hover{
+.Main_nav_item:hover {
   color: var(--ev-c-text-2);
   background-color: var(--ev-c-button-alt);
 }
@@ -153,12 +159,12 @@ input {
   text-underline-offset: 0.2em;
   font-size: larger;
 }
-.file_path div>svg {
+.file_path div > svg {
   width: 30px;
   height: 30px;
   margin-right: 5px;
 }
-.file_path div:hover{
+.file_path div:hover {
   text-decoration: underline;
 }
 
@@ -176,11 +182,11 @@ input {
   height: 50px;
   place-items: center;
 }
-.dir_folders button p{
+.dir_folders button p {
   font-size: 17px;
   margin: 0;
 }
-.dir_folders button svg{
+.dir_folders button svg {
   width: 27px;
   height: 27px;
   margin-right: 10px;
@@ -202,14 +208,14 @@ input {
   border-bottom: 1.5px solid var(--ev-c-text-1);
   cursor: pointer;
 }
-.FileElement:hover{
+.FileElement:hover {
   background-color: var(--ev-c-background-mute);
 }
-.FileElement p{
+.FileElement p {
   padding: 0;
   margin: 0;
 }
-.FileElement p:nth-child(2){
+.FileElement p:nth-child(2) {
   font-size: 13px;
 }
 .FileElement svg {
@@ -223,18 +229,18 @@ input {
   margin-bottom: 30px;
 }
 
-.SelectedActions{
+.SelectedActions {
   background-color: var(--ev-c-button-alt);
   border-radius: 5px;
   justify-content: end;
   margin-right: 40px;
 }
 
-.SelectedActions button{
+.SelectedActions button {
   font-size: 15px;
 }
 
-.PathActions{
+.PathActions {
   display: flex;
   width: 100%;
   margin-top: 25px;
@@ -242,17 +248,17 @@ input {
   justify-content: space-between;
 }
 
-.noneSelected{
+.noneSelected {
   background-color: transparent;
 }
-.noneSelected button{
+.noneSelected button {
   margin-left: 5px;
 }
 
-.headerBtnContainer::-webkit-scrollbar{
+.headerBtnContainer::-webkit-scrollbar {
   display: none;
 }
-.headerBtnContainer{
+.headerBtnContainer {
   display: flex;
   overflow-x: scroll;
   overflow-y: hidden;
@@ -261,16 +267,15 @@ input {
   max-height: 37px;
 }
 
-.ManagerContainer{
+.ManagerContainer {
   width: 100vw;
   height: 100%;
   display: flex;
   place-items: center center;
   margin-left: auto;
   margin-right: auto;
-
 }
-.ManagerContainer>div{
+.ManagerContainer > div {
   margin-left: auto;
   margin-right: auto;
 }

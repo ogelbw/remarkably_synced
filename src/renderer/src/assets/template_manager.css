@@ -1,10 +1,10 @@
-.btnHolder{
-    display: flex;
-    justify-content: center;
-    margin-top: 5px;
-    width: 100%;
+.btnHolder {
+  display: flex;
+  justify-content: center;
+  margin-top: 5px;
+  width: 100%;
 }
 
-.btnHolder button{
-    margin: 0 10px;
+.btnHolder button {
+  margin: 0 10px;
 }

@@ -1,33 +1,33 @@
-.splashscreenControls>div{
+.splashscreenControls > div {
   display: block;
 }
 
-.splashscreenControls{
+.splashscreenControls {
   display: flex;
   flex-direction: column;
   place-items: center center;
 }
 
-img{
+img {
   position: relative;
   width: 50vw;
-  max-width: calc(100vh/2);
+  max-width: calc(100vh / 2);
   margin-top: 10px;
   margin-bottom: 10px;
   max-height: 200vh;
   object-fit: cover;
 }
 
-.splashscreenPreviewContols{
+.splashscreenPreviewContols {
   position: relative;
 }
 
-.splashscreenPreviewContols div{
+.splashscreenPreviewContols div {
   position: absolute;
   bottom: 40px;
 }
 
-.splashscreenPreviewContols div button{
+.splashscreenPreviewContols div button {
   margin-left: 20px;
   margin-top: 10px;
 }
