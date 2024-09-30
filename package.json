@@ -25,9 +25,14 @@
     "@electron-toolkit/utils": "^3.0.0",
     "electron-prompt": "^1.7.0",
     "electron-updater": "^6.1.7",
-    "ssh2": "^1.15.0"
+    "image-size": "^1.1.1",
+    "react-dom": "^18.2.0",
+    "react": "^18.2.0",
+    "ssh2": "^1.15.0",
+    "sharp": "^0.33.4"
   },
   "devDependencies": {
+    "electron": "^28.2.0",
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
     "@electron-toolkit/eslint-config-ts": "^1.0.1",
     "@electron-toolkit/tsconfig": "^1.0.1",
@@ -36,15 +41,11 @@
     "@types/react-dom": "^18.2.18",
     "@types/ssh2": "^1.15.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "electron": "^28.2.0",
     "electron-builder": "^24.9.1",
     "electron-vite": "^2.1.0",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "prettier": "^3.2.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "sharp": "^0.33.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.12"
