@@ -5,3 +5,4 @@ out
 *.log*
 hidden
 package-lock.json
+tempUsrData
