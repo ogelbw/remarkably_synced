@@ -124,7 +124,7 @@ export function register_ipcMain_handlers(
   set_device: (d: Remarkable2_device) => void,
   get_device: () => Remarkable2_device,
   get_local_files: () => Remarkable2_files,
-  reparse_rm_files: () => void,
+  reparse_rm_files: () => void
 ): void {
   // Note this has to be located here since it's calls to the main process. (bad planning I know)
   const downloadFiles = async (syncPath: string, file_type: string): Promise<void> => {
