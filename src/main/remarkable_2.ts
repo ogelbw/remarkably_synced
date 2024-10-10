@@ -114,6 +114,12 @@ export class Remarkable2_files {
   parse_templates(templates_directory: string): void {
     this.templates = []
 
+    /** Check to make sure the file exists */
+    if (!fs.existsSync(join(templates_directory, 'templates.json')) || templates_directory === '') {
+      console.error('templates.json file not found or is empty.')
+      return
+    }
+
     // read the templates.json file
     const templates_data: {
       templates: remarkable_template_data[]
@@ -135,6 +141,12 @@ export class Remarkable2_files {
 
   parse_splashscreens(splashscreen_directory: string): void {
     this.splashscreens = []
+
+    /** Check to make sure the directory exists */
+    if (!fs.existsSync(splashscreen_directory) || splashscreen_directory === '') {
+      console.error('splashscreen directory not found or is empty.')
+      return
+    }
 
     /** get all of the .png in the splashscreen directory */
     fs.readdirSync(splashscreen_directory).forEach((file) => {
@@ -159,6 +171,12 @@ export class Remarkable2_files {
       children: []
     } as remarkable_directory)
     this.directory_lookup = new Map<string, string>()
+
+    /** If the directory doesn't stop before processing happens */
+    if (!fs.existsSync(files_directory) || files_directory === '') {
+      console.error('files directory not found or is empty.')
+      return
+    }
 
     /**
      * We scan the local files directory for any .metadata file. For each hit we get the file
