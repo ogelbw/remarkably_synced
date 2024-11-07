@@ -21,7 +21,11 @@ export function Splashscreen_manager(props: {
     })
   }, [])
 
-  return (
+  return splacescreen_names.length === 0 ? (
+    <div className="notFound">
+      <p>No Splashscreens</p>
+    </div>
+  ) : (
     <div className="ManagerContainer">
       <div className="splashscreenControls">
         <div>
