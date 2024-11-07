@@ -140,13 +140,21 @@ export function register_ipcMain_handlers(
           .then(() => {
             // notify the user that the files have been downloaded
             mainWindow.webContents.send('alert', `Downloaded files to ${syncPath}`)
+
+            /** Try to update the displayed files */
+            if (get_local_files() === undefined) {
+              return
+            } else {
+              reparse_rm_files()
+              console.log('reparsing files');
+              mainWindow.webContents.send('files-ready')
+            }
           })
           .catch(() => {
             mainWindow.webContents.send('alert', `Failed to download files to ${syncPath}`)
           })
           .finally(() => {
             mainWindow.webContents.send('unlock-interactions')
-            reparse_rm_files()
           })
         return
       } else if (file_type === 'templates') {
@@ -267,32 +275,52 @@ export function register_ipcMain_handlers(
   ipcMain.handle('select-replacement-splashscreen', async (_, screen: string) => {
     let path = await image_selection_dialog()
     if (path !== '') {
-      /** splash screens are either 1404x1872 or 1872x1404, get the aspect ration of the new image
-       * based on it rescize the image to fit the screen.
+      /** splash screens are either 1404x1872 or 1872x1404, get the aspect ratio of the new image
+       * based on it, resize the image to fit the screen.
        */
-      const dimensions = require('image-size')(path)
-      let scale = 0
-      if (dimensions.width > dimensions.height) {
-        /** This is a landscape image */
-        const x_scale = 1872 / dimensions.width
-        const y_scale = 1404 / dimensions.height
-        scale = Math.min(x_scale, y_scale)
-      } else {
-        /** This is a portrait image */
-        const x_scale = 1404 / dimensions.width
-        const y_scale = 1872 / dimensions.height
-        scale = Math.min(x_scale, y_scale)
-      }
-      console.log(`scale: ${scale}`)
+      // const dimensions = require('image-size')(path)
+      // let scale = 0
+      // if (dimensions.width > dimensions.height) {
 
-      /** read the selected path, rescale, and write to the splashscreens */
+      //   /** This is a landscape image */
+      //   const x_scale = 1872 / dimensions.width
+      //   const y_scale = 1404 / dimensions.height
+      //   scale = Math.min(x_scale, y_scale)
+      // } else {
+
+      //   /** This is a portrait image */
+      //   const x_scale = 1404 / dimensions.width
+      //   const y_scale = 1872 / dimensions.height
+      //   scale = Math.min(x_scale, y_scale)
+      // }
+      // console.log(`scale: ${scale}`)
+
+      /** read the selected path, get the background colour, rescale the image and write it to disk */
       const sharp = require('sharp')
       sharp(path)
-        .resize({
-          width: Math.round(dimensions.width * scale),
-          height: Math.round(dimensions.height * scale)
+        .extract({ left: 0, top: 0, width: 1, height: 1 })
+        .toBuffer()
+        .then((pixel: Buffer) => {
+          const bg = {
+            r: pixel[0],
+            g: pixel[1],
+            b: pixel[2],
+            alpha: 1
+          }
+
+          sharp(path)
+            .resize(1404, 1872, {
+              fit: sharp.fit.contain,
+              background: bg
+            })
+            .toFile(join(get_splashscreen_sync_path(), `${screen}.png`))
+            .then(() => {
+              console.log('resized image')
+            })
+            .catch((err: Error) => {
+              console.error(err)
+            })
         })
-        .toFile(join(get_splashscreen_sync_path(), `${screen}.png`))
         .catch((err: Error) => {
           console.error(err)
         })
@@ -772,7 +800,6 @@ export function register_ipcMain_handlers(
 
     // update the local files
     local_files.files.set(target, target_file)
-    console.log(`target file: ${Object.values(target_file)}`)
     local_files.files.set(container, container_file)
     local_files.files.set(old_container_hash, old_container)
   })

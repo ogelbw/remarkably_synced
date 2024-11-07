@@ -71,7 +71,7 @@ export const api = {
   },
 
   onFilesReady: (callback): void => {
-    ipcRenderer.on('files-ready', () => callback())
+    ipcRenderer.on('files-ready', (event, dest?: string) => callback(dest))
   },
 
   /** Get all the children at a container hash. */
@@ -84,8 +84,8 @@ export const api = {
     return ipcRenderer.invoke('get-path-to-hash', hash)
   },
 
-  request_root_render: (): void => {
-    ipcRenderer.invoke('request-root-render')
+  request_root_render: (dest?: string): void => {
+    ipcRenderer.invoke('request-root-render', dest)
   },
 
   /** Send all backed up files to the device from this machine. */

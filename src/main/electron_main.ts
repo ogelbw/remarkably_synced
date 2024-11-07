@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { Remarkable2_files, Remarkable2_device, remarkable_directory } from './remarkable_2'
+import { Remarkable2_files, Remarkable2_device } from './remarkable_2'
 import { get_config_field, register_ipcMain_handlers } from './ipc_functions'
 import { existsSync } from 'fs'
 
@@ -14,44 +14,32 @@ let template_sync_path: string = ''
 let splashscreen_sync_path: string = ''
 
 function read_local_files(): void {
+  let err_msg = ''
   if (file_sync_path === '') {
-    mainWindow.webContents.send('alert', 'file sync path not set')
-    return
+    err_msg = err_msg + '\n' + 'file sync path not set'
   }
   if (template_sync_path === '') {
-    mainWindow.webContents.send('alert', 'template sync path not set')
-    return
+    err_msg = err_msg + '\n' + 'template sync path not set'
   }
   if (splashscreen_sync_path === '') {
-    mainWindow.webContents.send('alert', 'splashscreen sync path not set')
-    return
+    err_msg = err_msg + '\n' + 'splashscreen sync path not set'
   }
 
   /** now check the key files */
   if (!existsSync(join(template_sync_path, 'templates.json'))) {
-    mainWindow.webContents.send('alert', 'Templates not synced, please sync with device.')
-    return
+    err_msg = err_msg + '\n' + 'Templates not synced, please sync with device.'
   }
   /**  check the splashscreen files */
   if (!existsSync(join(splashscreen_sync_path, 'suspended.png'))) {
-    mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
-    return
-  }
-  if (!existsSync(join(splashscreen_sync_path, 'poweroff.png'))) {
-    mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
-    return
-  }
-  if (!existsSync(join(splashscreen_sync_path, 'rebooting.png'))) {
-    mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
-    return
-  }
-  if (!existsSync(join(splashscreen_sync_path, 'overheating.png'))) {
-    mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
-    return
-  }
-  if (!existsSync(join(splashscreen_sync_path, 'batteryempty.png'))) {
-    mainWindow.webContents.send('alert', 'Splashscreens not synced, please sync with device.')
-    return
+    err_msg = err_msg + '\n' + 'Splashscreens not synced, please sync with device.'
+  } else if (!existsSync(join(splashscreen_sync_path, 'poweroff.png'))) {
+    err_msg = err_msg + '\n' + 'Splashscreens not synced, please sync with device.'
+  } else if (!existsSync(join(splashscreen_sync_path, 'rebooting.png'))) {
+    err_msg = err_msg + '\n' + 'Splashscreens not synced, please sync with device.'
+  } else if (!existsSync(join(splashscreen_sync_path, 'overheating.png'))) {
+    err_msg = err_msg + '\n' + 'Splashscreens not synced, please sync with device.'
+  } else if (!existsSync(join(splashscreen_sync_path, 'batteryempty.png'))) {
+    err_msg = err_msg + '\n' + 'Splashscreens not synced, please sync with device.'
   }
 
   /** try to load local files */
@@ -60,6 +48,11 @@ function read_local_files(): void {
     get_config_field('splashscreen'),
     get_config_field('file')
   )
+
+  if (err_msg !== '') {
+    console.log(err_msg)
+    mainWindow.webContents.send('alert', err_msg)
+  }
 }
 
 function createWindow(): void {
@@ -142,19 +135,19 @@ app.whenReady().then(() => {
     )
     mainWindow.webContents.send('files-ready')
 
-    // debug prints
-    Promise.all(Array.from(local_files.directory_lookup.keys())).then((keys) => {
-      keys.forEach((key) => {
-        console.log(`key: ${key} value: ${local_files.directory_lookup.get(key)}`)
-      })
+    // // debug prints
+    // Promise.all(Array.from(local_files.directory_lookup.keys())).then((keys) => {
+    //   keys.forEach((key) => {
+    //     console.log(`key: ${key} value: ${local_files.directory_lookup.get(key)}`)
+    //   })
 
-      const rootChildren = (local_files.files.get('') as remarkable_directory).children.map(
-        (child) => {
-          return child.visibleName
-        }
-      )
-      console.log(`Root children: ${rootChildren}`)
-    })
+    //   const rootChildren = (local_files.files.get('') as remarkable_directory).children.map(
+    //     (child) => {
+    //       return child.visibleName
+    //     }
+    //   )
+    //   console.log(`Root children: ${rootChildren}`)
+    // })
   })
 })
 

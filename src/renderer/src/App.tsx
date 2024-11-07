@@ -130,9 +130,10 @@ function App(): JSX.Element {
 
   /** on mount */
   useEffect(() => {
-    window.app_api.onFilesReady(() => {
+    window.app_api.onFilesReady((dest?: string) => {
       get_download_dirs()
-      update_current_displayed_childen()
+      update_current_displayed_childen(dest)
+      console.log('Files ready')
     })
     /** Spawn an Alert */
     window.app_api.onAlert((msg) => {

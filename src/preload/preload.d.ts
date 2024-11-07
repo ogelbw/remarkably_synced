@@ -66,7 +66,7 @@ declare global {
       get_path_to_hash: (hash: string) => Promise<remarkable_file_node[]>
 
       /** Request a root render */
-      request_root_render: () => void
+      request_root_render: (dest?: string) => void
 
       /** Get all the local splashscreens */
       get_local_splashscreens: () => Promise<string[]>
@@ -108,8 +108,6 @@ declare global {
       onDownloadTemplatesComplete: (callback: () => void) => void
       onDownloadSplashscreensComplete: (callback: () => void) => void
       onUnlockInterations: (callback: () => void) => void
-
-      /** Fired when the files locally on the computer have been parsed */
       onFilesReady: (callback: () => void) => void
     }
   }
