@@ -146,7 +146,7 @@ export function register_ipcMain_handlers(
               return
             } else {
               reparse_rm_files()
-              console.log('reparsing files');
+              console.log('reparsing files')
               mainWindow.webContents.send('files-ready')
             }
           })
@@ -273,7 +273,7 @@ export function register_ipcMain_handlers(
   })
 
   ipcMain.handle('select-replacement-splashscreen', async (_, screen: string) => {
-    let path = await image_selection_dialog()
+    const path = await image_selection_dialog()
     if (path !== '') {
       /** splash screens are either 1404x1872 or 1872x1404, get the aspect ratio of the new image
        * based on it, resize the image to fit the screen.
@@ -297,39 +297,42 @@ export function register_ipcMain_handlers(
 
       /** read the selected path, get the background colour, rescale the image and write it to disk */
       const sharp = require('sharp')
-      sharp(path)
+
+      const image_d = sharp(path)
+      let bg = {
+        r: 0,
+        g: 0,
+        b: 0,
+        alpha: 1
+      }
+
+      // getting the background colour
+      const n = await image_d
         .extract({ left: 0, top: 0, width: 1, height: 1 })
         .toBuffer()
+        .then((data: Buffer) => {
+          return sharp(data).raw().toBuffer()
+        })
         .then((pixel: Buffer) => {
-          const bg = {
+          bg = {
             r: pixel[0],
             g: pixel[1],
             b: pixel[2],
             alpha: 1
           }
-
-          sharp(path)
-            .resize(1404, 1872, {
-              fit: sharp.fit.contain,
-              background: bg
-            })
-            .toFile(join(get_splashscreen_sync_path(), `${screen}.png`))
-            .then(() => {
-              console.log('resized image')
-            })
-            .catch((err: Error) => {
-              console.error(err)
-            })
         })
-        .catch((err: Error) => {
-          console.error(err)
+        .then(async () => {
+          // resizing the image
+          const img = sharp(path)
+            .resize({ width: 1404, height: 1872, fit: sharp.fit.contain, background: bg })
+            .png()
+          img.toFile(join(get_splashscreen_sync_path(), `${screen}.png`))
+          const d = await img.toBuffer()
+          return `${d.toString('base64')}`
         })
-
-      /** Read the file and convert to base64 */
-      path = fs.readFileSync(path).toString('base64')
-      last_splashscreen_data = path
+      return n
     }
-    return path
+    return null
   })
 
   ipcMain.handle('set-device-password', async () => {
