@@ -5,6 +5,7 @@ import { app } from 'electron'
 import { join, sep } from 'path'
 import { Client, SFTPWrapper } from 'ssh2'
 import * as fs from 'fs'
+import { exit } from 'process'
 
 const RECURSIVE_FILE_BLACKLIST = ['.', '..', '.tree', 'thumbnails', 'cache', 'lost+found']
 
@@ -579,15 +580,29 @@ export class Remarkable2_device {
       // Get a list of files to download from the device.
       // This is done beforehand as sftp breaks with async.
       const toDownload = {}
-      let dirsQueue = [path]
-      while (dirsQueue.length > 0) {
-        const dir = dirsQueue.pop()
-        if (dir == undefined) {
-          break
+      try {
+        const dirsQueue = [path]
+        while (dirsQueue.length > 0) {
+          const dir = dirsQueue.pop()
+          if (dir === undefined) {
+            throw { message: 'List empty faster than expected' }
+          }
+          dirsQueue.splice(0, 1)
+          const files = await this.list_files_on_device(dir)
+          toDownload[dir] = files || []
+          // List Directories is inconsistant when returning the list,
+          // Sometimes it returns string without a prepend and sometimes it turns a list with them
+          const newDirs = (await this.list_directories_on_device(dir)) || []
+          for (const newDir of newDirs) {
+            // console.log(`New  dir: ${newDir}`)
+            dirsQueue.push(`${dir}${newDir}`)
+            // dirsQueue.push(`${newDir}/`)
+          }
         }
-        const files = await this.list_files_on_device(dir)
-        toDownload[dir] = files
-        dirsQueue = dirsQueue.concat(await this.list_directories_on_device(dir))
+      } catch (error) {
+        console.log('Something went wrong fetching the files')
+        console.log(error.toString())
+        exit()
       }
 
       // Downloading the files.
@@ -601,7 +616,7 @@ export class Remarkable2_device {
           for (const dir of Object.keys(toDownload)) {
             for (const file of toDownload[dir]) {
               const temp_destination = join(destination, dir.split('xochitl')[1], file)
-              const file_path = `${dir}/${file}`
+              const file_path = `${dir}${file}`
               console.log(`Downloading ${file_path} from device to ${temp_destination} locally...`)
 
               // make sure the directory exists
@@ -642,7 +657,7 @@ export class Remarkable2_device {
             dir !== '..' &&
             dir !== '' &&
             !RECURSIVE_FILE_BLACKLIST.includes(dir) &&
-            !dir.startsWith("'")
+            !dir.startsWith("'") 
           )
         })
         .map((dir) => {
