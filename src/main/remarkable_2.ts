@@ -559,34 +559,38 @@ export class Remarkable2_device {
   }
 
   /**
-   * recursive_download
+   * download_directory
    * @description Recursively download all files in a directory from the device.
    * @param path The path to the directory to download.
    * @param destination The relative path to the directory where the file is saved (in the electron
    * user data directory by default).
    * @returns A promise that resolves when all files have been downloaded.
    */
-  public recursive_download(
+  public download_directory(
     path: string,
     destination: string = app.getPath('appData')
   ): Promise<void> {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise<void>(async (resolve, reject) => {
-      // Get a list of all the directories in the current directory
-      const dirs = await this.list_directories_on_device(path)
-
       if (!path.endsWith('/')) {
         path = path + '/'
       }
 
-      // dir will eventually be empty
-      for (const dir of dirs) {
-        await this.recursive_download(`${path}${dir}`, destination)
+      // Get a list of files to download from the device.
+      // This is done beforehand as sftp breaks with async.
+      const toDownload = {}
+      let dirsQueue = [path]
+      while (dirsQueue.length > 0) {
+        const dir = dirsQueue.pop()
+        if (dir == undefined) {
+          break
+        }
+        const files = await this.list_files_on_device(dir)
+        toDownload[dir] = files
+        dirsQueue = dirsQueue.concat(await this.list_directories_on_device(dir))
       }
 
-      // Download all the files in the current directory
-      const files = await this.list_files_on_device(path)
-
+      // Downloading the files.
       this.client
         .sftp((err, sftp) => {
           if (err) {
@@ -594,20 +598,22 @@ export class Remarkable2_device {
             reject(err)
             return
           }
-          for (const file of files) {
-            const temp_destination = join(destination, path.split('xochitl')[1], file)
-            const file_path = `${path}/${file}`
-            console.log(`Downloading ${file_path} from device to ${temp_destination} locally...`)
+          for (const dir of Object.keys(toDownload)) {
+            for (const file of toDownload[dir]) {
+              const temp_destination = join(destination, dir.split('xochitl')[1], file)
+              const file_path = `${dir}/${file}`
+              console.log(`Downloading ${file_path} from device to ${temp_destination} locally...`)
 
-            // make sure the directory exists
-            fs.mkdirSync(temp_destination.split(sep).slice(0, -1).join(sep), { recursive: true })
-            sftp.fastGet(file_path, temp_destination, (err) => {
-              if (err) {
-                console.error(`Couldn't download file. ${file_path} to ${temp_destination}`)
-                reject(err)
-                return
-              }
-            })
+              // make sure the directory exists
+              fs.mkdirSync(temp_destination.split(sep).slice(0, -1).join(sep), { recursive: true })
+              sftp.fastGet(file_path, temp_destination, (err) => {
+                if (err) {
+                  console.error(`Couldn't download file. ${file_path} to ${temp_destination}`)
+                  reject(err)
+                  return
+                }
+              })
+            }
           }
           resolve()
         })
@@ -724,6 +730,6 @@ export class Remarkable2_device {
   public Download_note_files(
     destination: string = join(app.getPath('appData'), 'remarkable_synced_files', 'notes')
   ): Promise<void> {
-    return this.recursive_download('/home/root/.local/share/remarkable/xochitl/', destination)
+    return this.download_directory('/home/root/.local/share/remarkable/xochitl/', destination)
   }
 }
