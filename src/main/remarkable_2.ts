@@ -590,18 +590,17 @@ export class Remarkable2_device {
           dirsQueue.splice(0, 1)
           const files = await this.list_files_on_device(dir)
           toDownload[dir] = files || []
+
           // List Directories is inconsistant when returning the list,
           // Sometimes it returns string without a prepend and sometimes it turns a list with them
           const newDirs = (await this.list_directories_on_device(dir)) || []
           for (const newDir of newDirs) {
-            // console.log(`New  dir: ${newDir}`)
             dirsQueue.push(`${dir}${newDir}`)
-            // dirsQueue.push(`${newDir}/`)
           }
         }
       } catch (error) {
         console.log('Something went wrong fetching the files')
-        console.log(error.toString())
+        console.log((error as Error).toString())
         exit()
       }
 
@@ -657,7 +656,7 @@ export class Remarkable2_device {
             dir !== '..' &&
             dir !== '' &&
             !RECURSIVE_FILE_BLACKLIST.includes(dir) &&
-            !dir.startsWith("'") 
+            !dir.startsWith("'")
           )
         })
         .map((dir) => {
