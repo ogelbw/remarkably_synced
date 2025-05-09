@@ -71,7 +71,7 @@ export const api = {
   },
 
   onFilesReady: (callback): void => {
-    ipcRenderer.on('files-ready', (event, dest?: string) => callback(dest))
+    ipcRenderer.on('files-ready', (_, dest?: string) => callback(dest))
   },
 
   /** Get all the children at a container hash. */

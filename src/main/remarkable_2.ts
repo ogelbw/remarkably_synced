@@ -363,6 +363,8 @@ export class Remarkable2_device {
    * @param args An array of arguments to pass to ls.
    * @returns A promise that resolves with an array of strings representing the contents of
    * the directory.
+   * This is not exposed to the renderer process, it is only used from te main
+   * process
    */
   public ls(path: string, args: string[] | null): Promise<string[]> {
     let command = 'ls'
@@ -543,6 +545,9 @@ export class Remarkable2_device {
    * @description Deletes a collection of files on the connected tablet.
    * @param file_hash The hash of the file to delete.
    * @returns A promise that resolves when all files have been deleted.
+   *
+   * @note This make te assumption tat te tablet doesn't use symbolic links.
+   * for now this is true but may not be true in the future.
    */
   public async delete_remarkble_file_on_device(file_hash: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -565,6 +570,7 @@ export class Remarkable2_device {
    * @param destination The relative path to the directory where the file is saved (in the electron
    * user data directory by default).
    * @returns A promise that resolves when all files have been downloaded.
+   * @note Will break with very large directory chains.
    */
   public recursive_download(
     path: string,
@@ -650,7 +656,7 @@ export class Remarkable2_device {
   }
 
   /**
-   * get_files_in_directory
+   * list_files_on_device
    * @description Get a list of all the files in the directory on the device at the given path.
    * @param path The path to the directory to list.
    * @returns A promise that resolves with an array of strings representing the files.
@@ -665,7 +671,7 @@ export class Remarkable2_device {
   }
 
   /**
-   * Download_templates_from_device
+   * Download_templates
    * @description Downloads the templates from the device.
    * @param destination The relative path to the directory where the file is saved (in the electron
    * user data directory by default).
@@ -692,7 +698,7 @@ export class Remarkable2_device {
   }
 
   /**
-   * Download_splashscreens_from_device
+   * Download_splashscreens
    * @description Downloads the splashscreens from the device.
    * @param destination The relative path to the directory where the file is saved (in the electron
    * user data directory by default).
@@ -715,7 +721,7 @@ export class Remarkable2_device {
   }
 
   /**
-   * Download_all_sheet_from_device
+   * Download_note_files
    * @description Download all files from the xochitl directory on the device.
    * @param destination The relative path to the directory where the file is saved (in the electron
    * user data directory by default).
