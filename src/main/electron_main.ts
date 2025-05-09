@@ -25,11 +25,11 @@ function read_local_files(): void {
     err_msg = err_msg + '\n' + 'splashscreen sync path not set'
   }
 
-  /** now check the key files */
+  /** check the key files */
   if (!existsSync(join(template_sync_path, 'templates.json'))) {
     err_msg = err_msg + '\n' + 'Templates not synced, please sync with device.'
   }
-  /**  check the splashscreen files */
+  /** check the splashscreen files */
   if (!existsSync(join(splashscreen_sync_path, 'suspended.png'))) {
     err_msg = err_msg + '\n' + 'Splashscreens not synced, please sync with device.'
   } else if (!existsSync(join(splashscreen_sync_path, 'poweroff.png'))) {
@@ -56,7 +56,6 @@ function read_local_files(): void {
 }
 
 function createWindow(): void {
-  // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -104,8 +103,6 @@ app.whenReady().then(() => {
     file_sync_path = get_config_field('file')
     template_sync_path = get_config_field('template')
     splashscreen_sync_path = get_config_field('splashscreen')
-
-    /** Read and parse the local files if possible */
     read_local_files()
 
     // === Set up IPC handlers ===
@@ -135,7 +132,7 @@ app.whenReady().then(() => {
     )
     mainWindow.webContents.send('files-ready')
 
-    // // debug prints
+    // ==== debug prints ====
     // Promise.all(Array.from(local_files.directory_lookup.keys())).then((keys) => {
     //   keys.forEach((key) => {
     //     console.log(`key: ${key} value: ${local_files.directory_lookup.get(key)}`)
