@@ -532,6 +532,21 @@ export class Remarkable2_device {
     // upload all the files
     for (const file of files_to_upload) {
       const device_path = `/home/root/.local/share/remarkable/xochitl`
+
+      // ensure the directory exists on the device
+      const device_directory = `${device_path}/${file.split('/').slice(0, -1).join('/')}`
+      this.exec(
+        `mkdir -p "${device_directory}"`,
+        () => {
+          // directory created successfully or already exists
+        },
+        (err) => {
+          console.error(`Couldn't create directory on device: ${device_directory}`)
+          throw err
+        }
+      )
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
       await this.upload_file(
         join(file_sync_directory, join(...file.split('/'))),
         `${device_path}/${file}`,
